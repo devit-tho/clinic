@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "installCommand": "corepack enable && yarn set version berry && yarn install",
+  "outputDirectory": "./",
+  "buildCommand": "yarn workspaces foreach -pt --all --include=packages/* run build && turbo run build --filter=@repo/backend",
   "builds": [
     {
       "src": "src/main.ts",
