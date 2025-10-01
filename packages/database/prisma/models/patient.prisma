@@ -1,0 +1,20 @@
+model Patient {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  age         Int
+  phoneNumber String
+  gender      Gender
+  isDeleted   Boolean   @default(false) @map("is_deleted")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  createdBy   String    @map("created_by") @db.ObjectId
+  user        User      @relation(fields: [createdBy], references: [id])
+  updatedAt   DateTime? @map("updated_at")
+  updatedBy   String?   @map("updated_by") @db.ObjectId
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?   @map("deleted_by") @db.ObjectId
+
+  invoices Invoice[]
+  details  Detail[]
+
+  @@map("patients")
+}

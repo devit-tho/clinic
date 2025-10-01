@@ -1,0 +1,15 @@
+model Payment {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  total          Float    @default(0)
+  discount       Float    @default(0)
+  currentPayment Float    @default(0)
+  deposit        Float    @default(0)
+  balance        Float    @default(0)
+  status         Status   @default(NO_DETAILS)
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  invoice Invoice?
+
+  @@map("payments")
+}

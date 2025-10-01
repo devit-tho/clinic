@@ -1,0 +1,37 @@
+{
+  "name": "@repo/database",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "description": "Database package for clinic",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "require": "./dist/index.js",
+    "import": "./dist/index.mjs"
+  },
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development prisma generate && tsup --watch",
+    "build": "cross-env NODE_ENV=development prisma generate && tsup",
+    "db:push": "dotenv -e .env.development prisma db push",
+    "db:gen": "cross-env NODE_ENV=development prisma generate",
+    "db:studio": "prisma studio",
+    "db:seed": "prisma db seed",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@repo/typescript-config": "*",
+    "prisma-zod-generator": "^1.21.1",
+    "zod": "^4.1.9"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "cross-env": "^10.0.0",
+    "dotenv-cli": "^10.0.0",
+    "prisma": "^6.16.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "yarn@4.6.0"
+}

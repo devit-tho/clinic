@@ -1,0 +1,7 @@
+{
+  "useMultipleFiles": false,
+  "singleFileName": "index.ts",
+  "pureModels": true,
+  "pureModelsIncludeRelations": false,
+  "emit": { "objects": false, "crud": false, "variants": false }
+}

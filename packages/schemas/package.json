@@ -1,0 +1,29 @@
+{
+  "name": "@repo/schemas",
+  "private": true,
+  "version": "0.0.1",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "require": "./dist/index.js",
+    "import": "./dist/index.mjs"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "build": "tsup",
+    "watch": "tsc --build --watch"
+  },
+  "dependencies": {
+    "@repo/entities": "*",
+    "@repo/typescript-config": "*",
+    "zod": "^4.1.9"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "yarn@4.6.0"
+}

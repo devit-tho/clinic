@@ -1,0 +1,20 @@
+model Invoice {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  invNo     String    @unique
+  status    Status    @default(NO_DETAILS)
+  payment   Payment   @relation(fields: [paymentId], references: [id])
+  paymentId String    @unique @map("payment_id") @db.ObjectId
+  patient   Patient   @relation(fields: [patientId], references: [id])
+  patientId String    @map("patient_id") @db.ObjectId
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy String    @map("created_by") @db.ObjectId
+  updatedAt DateTime? @map("updated_at")
+  updatedBy String?   @map("updated_by") @db.ObjectId
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?   @map("deleted_by") @db.ObjectId
+
+  details Detail[]
+
+  @@map("invoices")
+}

@@ -1,0 +1,36 @@
+model User {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  alias        String
+  username     String    @unique
+  password     String
+  email        String
+  dateOfBirth  DateTime?  @map("date_of_birth")
+
+  /// @zod.custom.use(z.object({ street: z.string().optional(), city: z.string(), state: z.string().optional(), postalCode: z.string().optional() }))
+  placeOfBirth Json?     @db.Json @map("place_of_birth")
+
+  role         Role      @default(STAFF)
+
+  imageUrl     String?   @map("image_url")
+
+  phoneNumber  String?   @map("phone_number")
+
+  gender       Gender
+  
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  createdBy    String?   @map("created_by") @db.ObjectId
+  updatedAt    DateTime? @map("updated_at")
+  updatedBy    String?   @map("updated_by") @db.ObjectId
+  deletedAt    DateTime? @map("deleted_at")
+  deletedBy    String?   @map("deleted_by") @db.ObjectId
+
+  permission Permission?
+  patients Patient[]
+  treatments Treatment[]
+  tokens Token[]
+
+  @@map("users")
+}
