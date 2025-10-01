@@ -8,9 +8,9 @@ import {
   InvoiceDetail,
   InvoiceDetailPatient,
   Status,
+  UserWithoutPassword,
   excludeFields,
 } from '@repo/entities';
-import { UserWithoutPassword } from '../../../../packages/entities/dist/index.mjs';
 import { InvoiceDetailDto, InvoiceDto } from './invoice.dto';
 
 @Injectable()
