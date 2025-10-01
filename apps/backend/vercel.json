@@ -4,7 +4,7 @@
   "buildCommand": "yarn workspaces foreach -pt --all --include=packages/* run build && turbo run build --filter=@repo/backend",
   "builds": [
     {
-      "src": "src/main.ts",
+      "src": "dist/main.ts",
       "use": "@vercel/node"
     }
   ],
