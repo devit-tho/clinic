@@ -13,6 +13,12 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
+    "@repo/admin#build": {
+      "env": ["PORT, WEB_API"]
+    },
+    "@repo/backend#build": {
+      "env": ["PORT", "DATABASE_URL", "JWT_SECRET", "JWT_EXPIRES_IN"]
+    },
     "dev": {
       "cache": false,
       "persistent": true
