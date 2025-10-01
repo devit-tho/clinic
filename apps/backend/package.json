@@ -29,6 +29,7 @@
     "@nestjs/platform-express": "^11.1.3",
     "@repo/database": "*",
     "@repo/entities": "*",
+    "@repo/schemas": "*",
     "@repo/typescript-config": "*",
     "bcryptjs": "^3.0.2",
     "generate-password": "^1.7.1",
