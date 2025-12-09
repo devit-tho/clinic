@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "env-cmd -f .env.development prisma generate && tsup --watch",
-    "build": "env-cmd -f .env.development prisma generate && tsup",
+    "build": "prisma generate && tsup",
     "db:push": "env-cmd -f .env.development prisma db push",
     "db:gen": "env-cmd -f .env.development prisma generate",
     "db:studio": "env-cmd -f .env.development prisma studio",
