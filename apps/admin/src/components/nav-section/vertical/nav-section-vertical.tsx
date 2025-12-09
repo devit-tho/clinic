@@ -1,5 +1,7 @@
+import { useAuth } from "@/auth/hooks";
 import { List, NavList } from "@/layouts/dashboard/config-navigation";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { Role } from "@repo/entities";
 import clsx from "clsx";
 import { useCallback, useState } from "react";
 import { Collapse } from "../../collapse";
@@ -33,6 +35,8 @@ const NavSectionVertical: React.FC<NavSectionVerticalProps> = ({ datas }) => {
 export default NavSectionVertical;
 
 const Group: React.FC<GroupProp> = ({ title, lists }) => {
+  const { user } = useAuth();
+
   const [open, setOpen] = useState(true);
 
   const handleToggle = useCallback(() => {
@@ -46,6 +50,23 @@ const Group: React.FC<GroupProp> = ({ title, lists }) => {
       hasChild={!!list.childrens}
     />
   ));
+
+  if (user && user.role !== Role.ADMIN) {
+    const hasAccess = lists.some(
+      (list) => !list.roles || list.roles.includes(user.role)
+    );
+
+    const hasPermission = lists.some((list) => {
+      if (!list.permission) return true;
+      return user.permissions.some(
+        (p) =>
+          p.resource === list.permission?.resource &&
+          p.actions.includes(list.permission?.actions)
+      );
+    });
+
+    if (!hasAccess || !hasPermission) return null;
+  }
 
   return (
     <div className={clsx("flex flex-col gap-y-3")}>

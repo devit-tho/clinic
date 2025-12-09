@@ -11,6 +11,7 @@ import {
 import { useTreatments } from "@/api";
 import Iconify from "@/components/iconify";
 import Logo from "@/components/logo";
+import config from "@/config";
 import { formatPrice } from "@/utils/format";
 import { Card, CardBody } from "@heroui/card";
 import {
@@ -27,7 +28,6 @@ import isEmpty from "lodash/isEmpty";
 import { useLayoutEffect, useMemo, useRef } from "react";
 import { useReactToPrint } from "react-to-print";
 import { DetailDisclosureProp } from "./types";
-import config from "@/config";
 // --
 
 const DetailPrint: React.FC<DetailDisclosureProp> = ({
@@ -71,32 +71,43 @@ const DetailPrint: React.FC<DetailDisclosureProp> = ({
       if (isEmpty(value)) {
         return {
           createdDate: new Date(),
-          statusValue: Status.PENDING as keyof typeof Status,
+          statusValue: Status.PENDING as Status,
           discountValue: "0",
           currentPaymentValue: "0",
           depositValue: "0",
         };
       }
 
-      if (has(value, "payment.currentPayment")) {
-        const v = value as InvoiceDetail;
+      // if (has(value, "payment.currentPayment")) {
+      //   const v = value as InvoiceDetail;
+      //   return {
+      //     createdDate: v.createdAt,
+      //     statusValue: v.status,
+      //     discountValue: formatPrice(v.payment.discount),
+      //     depositValue: formatPrice(v.payment.deposit),
+      //   };
+      // }
+
+      if (has(value, "invoice")) {
+        const v = value as CreateOrUpdateInvoiceDetailType;
         return {
-          createdDate: v.createdAt,
-          statusValue: v.status,
-          discountValue: formatPrice(v.payment.discount),
-          currentPaymentValue: formatPrice(v.payment.currentPayment),
-          depositValue: formatPrice(v.payment.deposit),
+          createdDate: new Date(),
+          statusValue: "PENDING",
+          discountValue: formatPrice(v.invoice.discount ?? 0),
+          currentPaymentValue: formatPrice(
+            v.invoice.total - v.invoice.discount
+          ),
+          depositValue: formatPrice(v.invoice.deposit ?? 0),
         };
       }
 
-      const v = value as CreateOrUpdateInvoiceDetailType;
-
+      const v = value as InvoiceDetail;
       return {
-        createdDate: new Date(),
-        statusValue: v.invoice.status,
-        discountValue: formatPrice(v.invoice.discount),
-        currentPaymentValue: formatPrice(v.invoice.total - v.invoice.discount),
-        depositValue: formatPrice(v.invoice.deposit),
+        createdDate: v.createdAt,
+        statusValue: v.status,
+        discountValue: formatPrice(v.payment.discount),
+        currentPaymentValue: formatPrice(v.payment.total - v.payment.discount),
+        depositValue: formatPrice(v.payment.deposit),
       };
     }, [value]);
 
@@ -140,7 +151,7 @@ const DetailPrint: React.FC<DetailDisclosureProp> = ({
         <DrawerBody>
           {/* <PDFViewer>{PDF}</PDFViewer> */}
           <Card
-            shadow="sm"
+            shadow="none"
             classNames={{
               base: "h-full",
               body: "p-0",
@@ -154,16 +165,18 @@ const DetailPrint: React.FC<DetailDisclosureProp> = ({
                   <div className="space-y-1">
                     <h2 className="text-default-900 font-medium">Patient</h2>
 
-                    <div className="flex flex-col gap-y-0.5 text-default-700">
-                      <span className="text-sm">Name: {patient.name}</span>
-                      <span className="text-sm">Age: {patient.age}</span>
-                      <span className="text-sm">
-                        Gender: {capitalize(patient.gender)}
-                      </span>
-                      <span className="text-sm">
-                        Phone: {patient.phoneNumber}
-                      </span>
-                    </div>
+                    {patient && (
+                      <div className="flex flex-col gap-y-0.5 text-default-700">
+                        <span className="text-sm">Name: {patient.name}</span>
+                        <span className="text-sm">Age: {patient.age}</span>
+                        <span className="text-sm">
+                          Gender: {capitalize(patient.gender)}
+                        </span>
+                        <span className="text-sm">
+                          Phone: {patient.phoneNumber}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -175,7 +188,7 @@ const DetailPrint: React.FC<DetailDisclosureProp> = ({
                         Status: {capitalize(statusValue)}
                       </span>
                       <span className="text-sm">
-                        Created Date: {format(new Date(), config.DATE_FORMAT)}
+                        Date: {format(new Date(), config.DATE_FORMAT)}
                       </span>
                     </div>
                   </div>

@@ -2,7 +2,7 @@ import { List } from "@/layouts/dashboard/config-navigation";
 import { useActiveLink, usePathname } from "@/routes/hooks";
 import { useEffect, useState } from "react";
 import { Collapse } from "../../collapse";
-import SideItem from "./nav-item";
+import NavItem from "./nav-item";
 
 interface NavListProps {
   hasChild: boolean;
@@ -30,12 +30,7 @@ const NavList: React.FC<NavListProps> = ({ data, hasChild }) => {
 
   return (
     <div className="flex flex-col">
-      <SideItem
-        active={active}
-        data={data}
-        open={open}
-        onClick={handleToggle}
-      />
+      <NavItem active={active} data={data} open={open} onClick={handleToggle} />
 
       {hasChild && (
         <Collapse open={open}>

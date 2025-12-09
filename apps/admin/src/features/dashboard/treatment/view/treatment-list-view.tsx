@@ -5,12 +5,10 @@ import CustomBreadcrumbs from "@/components/custom-breadcrumb";
 import { DeleteItem } from "@/components/delete-item";
 import { EmptyContent } from "@/components/empty-content";
 import Iconify from "@/components/iconify";
-import config from "@/config";
 import { usePermissionAccess } from "@/hooks/use-permission-access";
 import { useLocales } from "@/locales";
 import { useRouter } from "@/routes/hooks";
 import paths from "@/routes/paths";
-import { TREATMENT } from "@/utils/permission-data";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -20,6 +18,7 @@ import {
 } from "@heroui/dropdown";
 import { useDisclosure } from "@heroui/react";
 import { Treatment } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 import { useState } from "react";
 
 // ----------------------------------------------------------------------
@@ -68,23 +67,34 @@ const TreatmentList: React.FC = () => {
       case "actions":
         const disabledKeys = [];
 
-        if (handlePermission([config.ROLE.ADMIN, TREATMENT.UPDATE])) {
-          disabledKeys.push("edit");
+        if (
+          !handlePermission({
+            resource: Resource.treatment,
+            actions: Action.UPDATE,
+          })
+        ) {
+          disabledKeys.push(Action.UPDATE);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, TREATMENT.DELETE])) {
-          disabledKeys.push("delete");
+        if (
+          !handlePermission({
+            resource: Resource.treatment,
+            actions: Action.DELETE,
+          })
+        ) {
+          disabledKeys.push(Action.DELETE);
         }
 
         return (
           <div className="relative flex items-center justify-end gap-2">
             <Dropdown
               aria-label="Treatment action"
-              isDisabled={handlePermission([
-                config.ROLE.ADMIN,
-                TREATMENT.UPDATE,
-                TREATMENT.DELETE,
-              ])}
+              isDisabled={
+                !handlePermission({
+                  resource: Resource.treatment,
+                  actions: [Action.UPDATE, Action.DELETE],
+                })
+              }
             >
               <DropdownTrigger aria-label="treatment action btn">
                 <Button isIconOnly size="sm" variant="light">
@@ -96,14 +106,14 @@ const TreatmentList: React.FC = () => {
                 disabledKeys={disabledKeys}
               >
                 <DropdownItem
-                  key="edit"
+                  key={Action.UPDATE}
                   startContent={<Iconify icon="solar:pen-bold-duotone" />}
                   onPress={() => editTreatment(treatment.id)}
                 >
                   {t("action.edit")}
                 </DropdownItem>
                 <DropdownItem
-                  key="delete"
+                  key={Action.DELETE}
                   startContent={
                     <Iconify icon="solar:trash-bin-2-bold-duotone" />
                   }
@@ -149,7 +159,10 @@ const TreatmentList: React.FC = () => {
           renderCell={renderCell}
           columns={columns}
           invisibleColumns={invisibleColumns}
-          addItem={!handlePermission([config.ROLE.ADMIN, TREATMENT.CREATE])}
+          addItem={handlePermission({
+            resource: Resource.treatment,
+            actions: Action.CREATE,
+          })}
         />
 
         <DeleteItem

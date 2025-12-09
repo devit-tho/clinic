@@ -1,4 +1,4 @@
-import { UserWithoutPassword } from 'lib/entities';
+import { UserWithoutPassword } from '@repo/entities';
 
 declare module 'express' {
   export interface Request {

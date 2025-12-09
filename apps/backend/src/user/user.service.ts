@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from '@prisma/client';
 import { db } from '@repo/database';
 // import {
 //   ChangePasswordDto,
@@ -20,6 +19,7 @@ import {
   excludeFields,
   LoginResponse,
   PlaceOfBirth,
+  Role,
   UserPermission,
   UserResponse,
   UserWithoutPassword,
@@ -55,10 +55,11 @@ export class UserService {
     const resp = await db.user.findMany({
       where: { isDeleted: false },
       include: {
-        permission: {
+        permissions: {
           select: {
             id: true,
-            values: true,
+            resource: true,
+            actions: true,
           },
         },
         _count: {
@@ -82,10 +83,11 @@ export class UserService {
         id,
       },
       include: {
-        permission: {
+        permissions: {
           select: {
             id: true,
-            values: true,
+            resource: true,
+            actions: true,
           },
         },
         _count: {
@@ -166,10 +168,11 @@ export class UserService {
       select: {
         user: {
           include: {
-            permission: {
+            permissions: {
               select: {
                 id: true,
-                values: true,
+                resource: true,
+                actions: true,
               },
             },
             _count: {
@@ -222,9 +225,6 @@ export class UserService {
         imageUrl: dto.imageUrl,
         createdAt: new Date(),
         // createdBy: '',
-        permission: {
-          create: {},
-        },
       },
       omit: {
         password: true,
@@ -253,9 +253,6 @@ export class UserService {
         imageUrl: dto.imageUrl,
         updatedAt: new Date(),
         updatedBy: req.user.id,
-        permission: {
-          create: {},
-        },
       },
       where: {
         id: req.user.id,
@@ -283,28 +280,33 @@ export class UserService {
     });
   }
 
-  async getPermission(id: string): Promise<UserPermission> {
-    const permission = await db.permission.findFirst({
+  async getPermissions(id: string): Promise<UserPermission> {
+    const user = await db.user.findUnique({
       where: {
-        userId: id,
+        id,
       },
       select: {
         id: true,
-        user: {
-          select: {
-            alias: true,
-          },
-        },
-        values: true,
       },
     });
 
-    if (!permission) throw new NotFoundException();
+    if (!user) throw new NotFoundException();
+
+    const permission = await db.permission.findMany({
+      where: {
+        userId: user.id,
+      },
+      select: {
+        id: true,
+        resource: true,
+        actions: true,
+      },
+    });
 
     return permission;
   }
 
-  async updatePermission(userId: string, id: string, dto: PermissionDto) {
+  async updatePermissions(userId: string, dto: PermissionDto) {
     const user = await db.user.findUnique({
       where: {
         id: userId,
@@ -313,23 +315,41 @@ export class UserService {
 
     if (!user) throw new NotFoundException();
 
-    const permission = await db.permission.findUnique({
-      where: {
-        id,
-        userId,
-      },
-    });
+    await db.$transaction(async (ctx) => {
+      for (const permission of dto.datas) {
+        const currentPermission = await ctx.permission.findFirst({
+          where: {
+            resource: permission.resource,
+            userId,
+          },
+          select: {
+            id: true,
+            resource: true,
+          },
+        });
 
-    if (!permission) throw new NotFoundException();
-
-    await db.permission.update({
-      where: {
-        id,
-        userId,
-      },
-      data: {
-        values: dto.values,
-      },
+        if (!currentPermission) {
+          await ctx.permission.create({
+            data: {
+              resource: permission.resource,
+              actions: permission.actions,
+              userId,
+            },
+          });
+        } else {
+          await ctx.permission.update({
+            where: {
+              id: currentPermission.id,
+              resource: currentPermission.resource,
+              userId,
+            },
+            data: {
+              resource: currentPermission.resource,
+              actions: permission.actions,
+            },
+          });
+        }
+      }
     });
   }
 
@@ -339,7 +359,7 @@ export class UserService {
         id,
       },
       select: {
-        permission: {
+        permissions: {
           select: {
             id: true,
           },
@@ -362,11 +382,12 @@ export class UserService {
         isDeleted: true,
         deletedAt: new Date(),
         deletedBy: curUser.id,
-        permission: {
-          update: {
-            isDeleted: true,
-          },
-        },
+      },
+    });
+
+    await db.permission.deleteMany({
+      where: {
+        userId: id,
       },
     });
   }

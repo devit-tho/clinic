@@ -24,8 +24,14 @@ export type { PermissionType, UserType };
 
 // ----------------------------------------------------------------------
 
-export const CreateOrUpdatePermissionSchema = PermissionSchema.pick({
-  values: true,
+export const CreateOrUpdatePermissionSchema = z.object({
+  datas: z.array(
+    PermissionSchema.pick({
+      id: true,
+      resource: true,
+      actions: true,
+    }).partial({ id: true })
+  ),
 });
 
 export type CreateOrUpdatePermissionType = z.infer<
@@ -93,3 +99,5 @@ export const LoginSchema = UserSchema.pick({
 });
 
 export type LoginType = z.infer<typeof LoginSchema>;
+
+// ----------------------------------------------------------------------

@@ -37,7 +37,9 @@ const PatientInvoiceEditView: React.FC<PatientInvoiceEditProp> = ({
 
   const initialValues: CreateOrUpdateInvoiceDetailType = {
     invoice: {
+      defaultPayment: invoiceData?.payment.defaultPayment || 0,
       discount: invoiceData?.payment.discount || 0,
+      balance: invoiceData?.payment.balance || 0,
       total: invoiceData?.payment.total || 0,
       newDeposit: 0,
       status: invoiceData?.status || Status.PENDING,

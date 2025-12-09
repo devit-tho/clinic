@@ -56,6 +56,8 @@ export const CreateOrUpdateInvoiceSchema = InvoiceSchema.omit({
   ...excludeFields,
 })
   .extend({
+    defaultPayment: PaymentSchema.shape.defaultPayment,
+    balance: PaymentSchema.shape.balance,
     status: StatusSchema.catch(Status.PENDING),
     discount: PaymentSchema.shape.discount,
     total: PaymentSchema.shape.total,

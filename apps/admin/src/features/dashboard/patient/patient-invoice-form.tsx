@@ -34,14 +34,16 @@ const PatientInvoiceForm: React.FC<
 
   const defaultValues: CreateOrUpdateInvoiceDetailType = {
     invoice: {
-      discount: initialValues?.invoice.discount || 0,
-      total: initialValues?.invoice.total || 0,
-      newDeposit: initialValues?.invoice.newDeposit || 0,
-      status: initialValues?.invoice.status || Status.PENDING,
-      deposit: initialValues?.invoice.deposit || 0,
+      defaultPayment: initialValues?.invoice.defaultPayment ?? 0,
+      balance: initialValues?.invoice.balance ?? 0,
+      discount: initialValues?.invoice.discount ?? 0,
+      total: initialValues?.invoice.total ?? 0,
+      newDeposit: 0,
+      status: initialValues?.invoice.status ?? Status.PENDING,
+      deposit: initialValues?.invoice.deposit ?? 0,
       patientId,
     },
-    details: initialValues?.details || [],
+    details: initialValues?.details ?? [],
   };
 
   const methods = useForm<CreateOrUpdateInvoiceDetailType>({
@@ -83,6 +85,7 @@ const PatientInvoiceForm: React.FC<
             onOpenView={previewPDFModal.onOpen}
             patientId={patientId}
             invNo={invNo}
+            editMode={editMode}
           />
 
           <div className="flex items-center justify-end gap-x-2">

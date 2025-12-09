@@ -4,7 +4,7 @@ import { CreateOrUpdateInvoiceDetailType } from "@repo/schemas";
 
 export interface DetailDisclosureProp extends UseDisclosureProps {
   onOpenChange: (open: boolean) => void;
-  patient: Patient;
+  patient?: Patient;
   invNo: string;
-  value: InvoiceDetail | CreateOrUpdateInvoiceDetailType;
+  value?: InvoiceDetail | CreateOrUpdateInvoiceDetailType;
 }

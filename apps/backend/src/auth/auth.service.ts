@@ -15,10 +15,11 @@ export class AuthService {
       select: {
         user: {
           include: {
-            permission: {
+            permissions: {
               select: {
                 id: true,
-                values: true,
+                resource: true,
+                actions: true,
               },
             },
             _count: {

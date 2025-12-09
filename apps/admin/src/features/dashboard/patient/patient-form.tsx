@@ -1,5 +1,7 @@
 import FormProvider from "@/components/hook-form";
 import { useLocales } from "@/locales";
+import { useRouter } from "@/routes/hooks";
+import paths from "@/routes/paths";
 import { FormProps } from "@/types";
 import { Button } from "@heroui/button";
 import { addToast } from "@heroui/react";
@@ -20,6 +22,8 @@ const PatientForm: React.FC<FormProps<Patient, CreateOrUpdatePatientType>> = ({
   onSubmit,
 }) => {
   const { t } = useLocales();
+
+  const router = useRouter();
 
   const editMode = !isEmpty(initialValues);
 
@@ -52,6 +56,8 @@ const PatientForm: React.FC<FormProps<Patient, CreateOrUpdatePatientType>> = ({
         description: t(message),
         color: "success",
       });
+
+      router.push(paths.dashboard.patient.root);
     } catch (error) {
       console.error(error);
       reset();

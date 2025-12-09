@@ -13,15 +13,17 @@
     "check-types": {
       "dependsOn": ["^check-types"]
     },
-    "@repo/admin#build": {
-      "env": ["PORT, WEB_API"]
-    },
-    "@repo/backend#build": {
-      "env": ["PORT", "DATABASE_URL", "JWT_SECRET", "JWT_EXPIRES_IN"]
-    },
+
+    "@repo/database#dev": { "persistent": true },
+    "@repo/entities#dev": { "persistent": true },
+    "@repo/schemas#dev": { "persistent": true },
+    "@repo/backend#dev": { "persistent": true },
+    "@repo/admin#dev": { "persistent": true },
+
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "dependsOn": ["^dev"]
     }
   }
 }

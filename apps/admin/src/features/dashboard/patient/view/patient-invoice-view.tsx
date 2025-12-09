@@ -11,7 +11,6 @@ import { useLocales } from "@/locales";
 import { useRouter } from "@/routes/hooks";
 import paths from "@/routes/paths";
 import { formatPrice } from "@/utils/format";
-import { PATIENT } from "@/utils/permission-data";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import {
@@ -23,6 +22,7 @@ import {
 import { useDisclosure } from "@heroui/modal";
 import { addToast } from "@heroui/react";
 import { Invoice, InvoiceDetail, Status } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 import { format } from "date-fns";
 import omit from "lodash/omit";
 import startCase from "lodash/startCase";
@@ -97,11 +97,11 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
     },
     { name: t("total"), field: "total", sortable: true },
     { name: t("discount"), field: "discount", sortable: true },
-    {
-      name: t("patient_invoice.current_payment"),
-      field: "current_payment",
-      sortable: true,
-    },
+    // {
+    //   name: t("patient_invoice.current_payment"),
+    //   field: "current_payment",
+    //   sortable: true,
+    // },
     {
       name: t("patient_invoice.invoice_status"),
       field: "invoice_status",
@@ -123,7 +123,7 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
     "inv_no",
     "total",
     "discount",
-    "current_payment",
+    // "current_payment",
     "invoice_status",
     "payment_status",
     "created_at",
@@ -197,18 +197,21 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
         return <span>$ {formatPrice(invoice.payment.total)}</span>;
       case "discount":
         return <span>$ {formatPrice(invoice.payment.discount)}</span>;
-      case "current_payment":
-        return <span>$ {formatPrice(invoice.payment.currentPayment)}</span>;
+      // case "current_payment":
+      //   return <span>$ {formatPrice(invoice.payment.currentPayment)}</span>;
       case "invoice_status":
         return (
-          <Chip color={getBadgeColor(invoice.status)}>
-            {startCase(invoice.status)}
+          <Chip color={getBadgeColor(invoice.status)} className="text-white">
+            {startCase(invoice.status.toLowerCase())}
           </Chip>
         );
       case "payment_status":
         return (
-          <Chip color={getBadgeColor(invoice.payment.status)}>
-            {startCase(invoice.payment.status)}
+          <Chip
+            color={getBadgeColor(invoice.payment.status)}
+            className="text-white"
+          >
+            {startCase(invoice.payment.status.toLowerCase())}
           </Chip>
         );
       case "created_at":
@@ -218,32 +221,56 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
       case "actions":
         const disabledKeys = [];
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.VIEW_DETAILS])) {
-          disabledKeys.push("view");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.VIEW_DETAILS,
+          })
+        ) {
+          disabledKeys.push(Action.VIEW_DETAILS);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.PRINT_INVOICES])) {
-          disabledKeys.push("print");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.PRINT,
+          })
+        ) {
+          disabledKeys.push(Action.PRINT);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.UPDATE_INVOICES])) {
-          disabledKeys.push("edit");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.UPDATE_INVOICES,
+          })
+        ) {
+          disabledKeys.push(Action.UPDATE_INVOICES);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.DELETE_INVOICES])) {
-          disabledKeys.push("delete");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.DELETE_INVOICES,
+          })
+        ) {
+          disabledKeys.push(Action.DELETE_INVOICES);
         }
 
         return (
           <div className="relative flex items-center justify-end gap-2">
             <Dropdown
-              isDisabled={handlePermission([
-                config.ROLE.ADMIN,
-                PATIENT.VIEW_DETAILS,
-                PATIENT.PRINT_INVOICES,
-                PATIENT.UPDATE_INVOICES,
-                PATIENT.DELETE_INVOICES,
-              ])}
+              isDisabled={
+                !handlePermission({
+                  resource: Resource.patient,
+                  actions: [
+                    Action.VIEW_DETAILS,
+                    Action.PRINT,
+                    Action.UPDATE_INVOICES,
+                    Action.DELETE_INVOICES,
+                  ],
+                })
+              }
             >
               <DropdownTrigger>
                 <Button isIconOnly size="sm" variant="light">
@@ -252,28 +279,28 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
               </DropdownTrigger>
               <DropdownMenu disabledKeys={disabledKeys}>
                 <DropdownItem
-                  key="view"
+                  key={Action.VIEW_DETAILS}
                   startContent={<Iconify icon="solar:eye-bold-duotone" />}
                   onPress={onOpenView}
                 >
-                  {t("action.view")}
+                  {t(`action.${Action.VIEW_DETAILS}`)}
                 </DropdownItem>
                 <DropdownItem
-                  key="print"
+                  key={Action.PRINT}
                   startContent={<Iconify icon="solar:printer-2-bold-duotone" />}
                   onPress={onOpenPrint}
                 >
                   {t("action.print")}
                 </DropdownItem>
                 <DropdownItem
-                  key="edit"
+                  key={Action.UPDATE_INVOICES}
                   startContent={<Iconify icon="solar:pen-bold-duotone" />}
                   onPress={() => editInvoice(invoice.patientId, invoice.id)}
                 >
                   {t("action.edit")}
                 </DropdownItem>
                 <DropdownItem
-                  key="delete"
+                  key={Action.DELETE_INVOICES}
                   startContent={
                     <Iconify icon="solar:trash-bin-2-bold-duotone" />
                   }
@@ -311,9 +338,10 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
           filterName="invNo"
           selectionMode="single"
           invisibleColumns={invisibleColumns}
-          addItem={
-            !handlePermission([config.ROLE.ADMIN, PATIENT.CREATE_INVOICES])
-          }
+          addItem={handlePermission({
+            resource: Resource.patient,
+            actions: Action.CREATE_INVOICES,
+          })}
           columns={columns}
           datas={patientData.invoices}
           tableDataLoading={patientLoading}
@@ -322,6 +350,7 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
           tableEmptyContent={emptyContent}
         />
       </div>
+
       <DetailModal
         isOpen={detailModal.isOpen}
         onClose={onCloseView}
@@ -329,6 +358,7 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
         invNo={state.invoice?.invNo || ""}
         details={state.invoice?.details || []}
       />
+
       <DeleteItem
         onPress={deleteInvoice}
         title={t("invoice")}

@@ -15,6 +15,7 @@ import {
   CreateOrUpdateDetailType,
   CreateOrUpdateInvoiceDetailType,
 } from "@repo/schemas";
+import isEmpty from "lodash/isEmpty";
 import isNumber from "lodash/isNumber";
 import lowerCase from "lodash/lowerCase";
 import snakeCase from "lodash/snakeCase";
@@ -28,6 +29,7 @@ interface InvoiceFormProps {
   onOpenView: () => void;
   patientId: string;
   invNo: string;
+  editMode?: boolean;
 }
 
 // ----------------------------------------------------------------------
@@ -35,6 +37,7 @@ interface InvoiceFormProps {
 const InvoiceFormField: React.FC<InvoiceFormProps> = ({
   onOpenView,
   patientId,
+  editMode = false,
 }) => {
   const [editValueIndex, setEditValueIndex] = useState<number | undefined>();
 
@@ -51,8 +54,6 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
   const { setValue, watch } = methods;
 
   const value = watch();
-
-  const currentPayment = value.invoice.total - value.invoice.discount;
 
   const treatmentMap = useMemo(
     () =>
@@ -87,6 +88,8 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
       const currentTreatment = treatmentMap[data.treatmentId];
 
       const number = data.upper + data.lower;
+
+      if (isEmpty(currentTreatment)) return null;
 
       switch (columnKey) {
         case "type":
@@ -184,7 +187,15 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
 
     const total = number * currentTreatment?.price;
 
+    setValue("invoice.defaultPayment", value.invoice.defaultPayment + total, {
+      shouldValidate: true,
+    });
+
     setValue("invoice.total", value.invoice.total + total, {
+      shouldValidate: true,
+    });
+
+    setValue("invoice.balance", value.invoice.balance + total, {
       shouldValidate: true,
     });
 
@@ -213,7 +224,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
 
       const total = number * currentTreatment?.price;
 
-      setValue("invoice.total", value.invoice.total - total, {
+      setValue("invoice.defaultPayment", value.invoice.defaultPayment - total, {
         shouldValidate: true,
       });
     }
@@ -232,7 +243,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
   return (
     <>
       <div className="flex flex-col gap-y-4">
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           <RHFSelect
             name="invoice.status"
             label={t("status")}
@@ -240,34 +251,136 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
           />
 
           <RHFTextField
-            name="invoice.newDeposit"
+            name="invoice.defaultPayment"
             type="number"
             showZero
-            label={t("patient_invoice_form.new_deposit")}
+            label={t("patient_invoice_form.default_payment")}
             endContent={<>$</>}
-          />
-
-          <RHFTextField
-            name="invoice.deposit"
-            type="number"
-            showZero
-            label={t("patient_invoice_form.deposit")}
-            endContent={<>$</>}
+            isDisabled
           />
 
           <Input
+            type="number"
+            value={String(value.invoice.discount)}
+            label={t("discount")}
+            endContent={<>$</>}
+            isDisabled={value.invoice.defaultPayment <= 0 || editMode}
+            onChange={(e) => {
+              const num = Number(e.target.value);
+
+              const maxDiscount = value.invoice.defaultPayment;
+              const correctedDiscount = num > maxDiscount ? maxDiscount : num;
+
+              const newBalance =
+                value.invoice.defaultPayment - correctedDiscount;
+
+              setValue("invoice.discount", correctedDiscount, {
+                shouldValidate: true,
+              });
+              setValue("invoice.balance", newBalance > 0 ? newBalance : 0, {
+                shouldValidate: true,
+              });
+              setValue("invoice.total", newBalance > 0 ? newBalance : 0, {
+                shouldValidate: true,
+              });
+            }}
+          />
+
+          <Input
+            type="number"
+            label={t(
+              `patient_invoice_form.${editMode ? "new_deposit" : "deposit"}`
+            )}
+            value={
+              editMode
+                ? String(value.invoice.newDeposit)
+                : String(value.invoice.deposit)
+            }
+            endContent={<>$</>}
+            isDisabled={value.invoice.defaultPayment <= 0}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+
+              console.log(val);
+
+              if (editMode) {
+                const rawNewDeposit = Number(val);
+
+                // previousDeposit is what was already deposited, excluding newDeposit
+                const previousDeposit =
+                  value.invoice.deposit - (value.invoice.newDeposit || 0);
+
+                const total =
+                  value.invoice.defaultPayment - value.invoice.discount;
+
+                // Clamp newDeposit to remaining balance
+                const remainingBalance = total - previousDeposit;
+                const correctedNewDeposit = Math.min(
+                  rawNewDeposit,
+                  remainingBalance
+                );
+
+                // Update newDeposit
+                setValue("invoice.newDeposit", correctedNewDeposit, {
+                  shouldValidate: true,
+                });
+
+                // Total deposit = previous + newDeposit
+                setValue(
+                  "invoice.deposit",
+                  previousDeposit + correctedNewDeposit,
+                  { shouldValidate: true }
+                );
+
+                // Update balance
+                setValue(
+                  "invoice.balance",
+                  total - (previousDeposit + correctedNewDeposit),
+                  {
+                    shouldValidate: true,
+                  }
+                );
+              } else {
+                const finalDeposit = Math.min(val, value.invoice.total);
+
+                setValue("invoice.deposit", finalDeposit, {
+                  shouldValidate: true,
+                });
+
+                setValue(
+                  "invoice.balance",
+                  value.invoice.total - finalDeposit,
+                  {
+                    shouldValidate: true,
+                  }
+                );
+              }
+            }}
+          />
+
+          {editMode && (
+            <RHFTextField
+              name="invoice.deposit"
+              type="number"
+              showZero
+              label={t("patient_invoice_form.deposit")}
+              endContent={<>$</>}
+              isDisabled
+            />
+          )}
+          {/* <Input
             label={t("patient_invoice_form.current_payment")}
             isDisabled
             value={currentPayment.toString()}
             endContent={<>$</>}
-          />
-
+          /> */}
           <RHFTextField
-            name="invoice.discount"
+            name="invoice.balance"
             type="number"
             showZero
-            label={t("discount")}
+            label={t("balance")}
             endContent={<>$</>}
+            isDisabled
           />
 
           <RHFTextField
@@ -281,7 +394,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
         </div>
 
         <div className="flex flex-col gap-2.5">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between flex-wrap items-center">
             <h2 className="text-lg font-bold">{t("detail.title")}</h2>
 
             <div className="flex justify-end gap-x-2">

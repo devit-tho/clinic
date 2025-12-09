@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { UserWithoutPassword } from '@repo/entities';
 import { Request } from 'express';
 import { ExtractJwt, Strategy, StrategyOptionsWithRequest } from 'passport-jwt';
-import { AuthService } from './auth.service';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

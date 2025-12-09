@@ -37,7 +37,7 @@ const LoginView: React.FC = () => {
   const methods = useForm<LoginWithoutDevice>({
     defaultValues: {
       username: "D0001",
-      password: "vidvid123",
+      password: "admin123",
     },
     resolver: zodResolver(
       LoginSchema.omit({

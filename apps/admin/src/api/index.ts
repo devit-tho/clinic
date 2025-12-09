@@ -17,7 +17,7 @@ type AxiosInstanceConfig = {
   options: AxiosRequestConfig;
 };
 
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(
     public readonly statusCode: number,
     message: string
@@ -34,6 +34,12 @@ const client = axios.create({
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
   },
+});
+
+client.interceptors.request.use((config) => {
+  const lang = localStorage.getItem("i18nextLng") || "en";
+  config.headers["Accept-Language"] = lang;
+  return config;
 });
 
 client.interceptors.response.use(
@@ -91,14 +97,14 @@ export const fetcher = async <T>(url: string) =>
   getData<T>(await getRequest<T>({ path: url }));
 
 export async function getRequest<T, D = any>(req: Request<D>): Response<T, D> {
-  return await client.get<T>(
+  return client.get<T>(
     req.path,
     axiosInstanceConfig({ options: req.options || {}, token: req.token })
   );
 }
 
 export async function postRequest<T, D>(req: Request<D>): Response<T, D> {
-  return await client.post<T>(
+  return client.post<T>(
     req.path,
     req.data,
     axiosInstanceConfig({ options: req.options || {}, token: req.token })
@@ -106,7 +112,7 @@ export async function postRequest<T, D>(req: Request<D>): Response<T, D> {
 }
 
 export async function patchRequest<T, D>(req: Request<D>): Response<T, D> {
-  return await client.patch<T>(
+  return client.patch<T>(
     req.path,
     req.data,
     axiosInstanceConfig({ options: req.options || {}, token: req.token })
@@ -114,7 +120,7 @@ export async function patchRequest<T, D>(req: Request<D>): Response<T, D> {
 }
 
 export async function putRequest<T, D>(req: Request<D>): Response<T, D> {
-  return await client.put<T>(
+  return client.put<T>(
     req.path,
     req.data,
     axiosInstanceConfig({ options: req.options || {}, token: req.token })
@@ -122,7 +128,7 @@ export async function putRequest<T, D>(req: Request<D>): Response<T, D> {
 }
 
 export async function deleteRequest<T, D>(req: Request<D>): Response<T, D> {
-  return await client.delete(
+  return client.delete(
     req.path,
     axiosInstanceConfig({ options: req.options || {}, token: req.token })
   );

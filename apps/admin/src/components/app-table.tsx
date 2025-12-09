@@ -44,6 +44,9 @@ interface AppTableProp<T = object> {
   showBottomContent?: boolean;
   shadow?: "none" | "sm" | "md" | "lg" | undefined;
   filterName?: keyof T;
+  exportCsv?: boolean;
+  csvFileName?: string;
+  csvHeader?: { key: string; name: string }[];
 }
 
 export default function AppTable<T extends { id?: string | number | null }>({
@@ -312,7 +315,9 @@ export default function AppTable<T extends { id?: string | number | null }>({
         {sortedItems.map((item, ind) => (
           <TableRow key={ind}>
             {(columnKey) => (
-              <TableCell>{renderCells(item, columnKey, ind)}</TableCell>
+              <TableCell className="whitespace-nowrap">
+                {renderCells(item, columnKey, ind)}
+              </TableCell>
             )}
           </TableRow>
         ))}

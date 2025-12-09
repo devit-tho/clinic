@@ -1,10 +1,11 @@
-import { usePermissionAccess } from "@/hooks/use-permission-access";
+import { Role } from "@repo/entities";
 import { PropsWithChildren } from "react";
+import { useAuth } from "../hooks";
 
 // ----------------------------------------------------------------------
 
 interface RoleBasedGuardProp {
-  roles?: string[];
+  roles?: Role[];
 }
 
 // ----------------------------------------------------------------------
@@ -13,9 +14,13 @@ const RoleBasedGuard: React.FC<PropsWithChildren<RoleBasedGuardProp>> = ({
   children,
   roles,
 }) => {
-  const { handlePermission } = usePermissionAccess();
+  const { user } = useAuth();
 
-  if (typeof roles !== "undefined" && handlePermission(roles)) {
+  if (user && user.role === Role.ADMIN) {
+    return <>{children}</>;
+  }
+
+  if (typeof roles !== "undefined" && !roles.includes(user?.role as Role)) {
     return <div className="">You don't have access for this page</div>;
   }
 

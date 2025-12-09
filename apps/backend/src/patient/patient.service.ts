@@ -5,6 +5,7 @@ import {
   PatientInvoice,
   RecentPatient,
   Role,
+  UserWithoutPassword,
   excludeFields,
 } from '@repo/entities';
 import { Request } from 'express';
@@ -14,11 +15,11 @@ import { PatientDto } from './patient.dto';
 export class PatientService {
   constructor() {}
 
-  async getAll(req: Request): Promise<Patient[]> {
+  async getAll(user: UserWithoutPassword): Promise<Patient[]> {
     return db.patient.findMany({
       where: {
         isDeleted: false,
-        ...(req.user.role !== Role.ADMIN && { createdBy: req.user.id }),
+        ...(user.role !== Role.ADMIN && { createdBy: user.id }),
       },
       orderBy: {
         createdAt: 'desc',

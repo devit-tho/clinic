@@ -60,7 +60,6 @@ export class DetailService {
     await db.payment.update({
       data: {
         total: invoice.payment.total + detail.treatment.price,
-        currentPayment: invoice.payment.total,
       },
       where: {
         id: invoice.payment.id,

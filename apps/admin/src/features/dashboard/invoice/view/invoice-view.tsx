@@ -7,7 +7,6 @@ import { usePermissionAccess } from "@/hooks/use-permission-access";
 import { useLocales } from "@/locales";
 import paths from "@/routes/paths";
 import { formatPrice } from "@/utils/format";
-import { INVOICE } from "@/utils/permission-data";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import {
@@ -19,6 +18,7 @@ import {
 import { useDisclosure } from "@heroui/modal";
 import { Icon } from "@iconify/react";
 import { InvoiceDetailPatient, Status } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 import { format } from "date-fns";
 import startCase from "lodash/startCase";
 import { useState } from "react";
@@ -34,7 +34,7 @@ const InvoiceView: React.FC = () => {
   const detailModal = useDisclosure();
   const detailPrint = useDisclosure();
   const { datas, loading } = useInvoices();
-  const [detail, setDetail] = useState<InvoiceDetailPatient | null>(null);
+  const [detail, setDetail] = useState<InvoiceDetailPatient>();
 
   const columns: Column[] = [
     {
@@ -45,7 +45,7 @@ const InvoiceView: React.FC = () => {
     { name: t("name"), field: "name", sortable: true },
     { name: t("total"), field: "total" },
     { name: t("discount"), field: "discount" },
-    { name: t("patient_invoice.current_payment"), field: "current_payment" },
+    // { name: t("patient_invoice.current_payment"), field: "current_payment" },
     {
       name: t("patient_invoice.invoice_status"),
       field: "invoice_status",
@@ -84,7 +84,7 @@ const InvoiceView: React.FC = () => {
   }
 
   function onCloseView() {
-    setDetail(null);
+    setDetail(undefined);
     detailModal.onClose();
   }
 
@@ -94,7 +94,7 @@ const InvoiceView: React.FC = () => {
   }
 
   function onClosePrint() {
-    setDetail(null);
+    setDetail(undefined);
     detailPrint.onClose();
   }
 
@@ -116,44 +116,56 @@ const InvoiceView: React.FC = () => {
         return <span>$ {formatPrice(invoice.payment.total)}</span>;
       case "discount":
         return <span>$ {formatPrice(invoice.payment.discount)}</span>;
-      case "current_payment":
-        return <span>$ {formatPrice(invoice.payment.currentPayment)}</span>;
+      // case "current_payment":
+      //   return <span>$ {formatPrice(invoice.payment.currentPayment)}</span>;
       case "invoice_status":
         return (
-          <Chip color={getBadgeColor(invoice.status)}>
-            {startCase(invoice.status)}
+          <Chip color={getBadgeColor(invoice.status)} className="text-white">
+            {startCase(invoice.status.toLowerCase())}
           </Chip>
         );
       case "payment_status":
         return (
-          <Chip color={getBadgeColor(invoice.payment.status)}>
-            {startCase(invoice.payment.status)}
+          <Chip
+            color={getBadgeColor(invoice.payment.status)}
+            className="text-white"
+          >
+            {startCase(invoice.payment.status.toLowerCase())}
           </Chip>
         );
       case "created_at":
-        return (
-          <span>{format(new Date(invoice.createdAt), config.DATE_FORMAT)}</span>
-        );
+        return <span>{format(invoice.createdAt, config.DATE_FORMAT)}</span>;
       case "actions":
         const disabledKeys = [];
 
-        if (handlePermission([config.ROLE.ADMIN, INVOICE.DETAILS])) {
-          disabledKeys.push("view");
+        if (
+          !handlePermission({
+            resource: Resource.invoice,
+            actions: Action.VIEW_DETAILS,
+          })
+        ) {
+          disabledKeys.push(Action.VIEW_DETAILS);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, INVOICE.PRINT])) {
-          disabledKeys.push("print");
+        if (
+          !handlePermission({
+            resource: Resource.invoice,
+            actions: Action.PRINT,
+          })
+        ) {
+          disabledKeys.push(Action.PRINT);
         }
 
         return (
           <div className="relative flex items-center justify-end gap-2">
             <Dropdown
               aria-label="main action"
-              isDisabled={handlePermission([
-                config.ROLE.ADMIN,
-                INVOICE.DETAILS,
-                INVOICE.PRINT,
-              ])}
+              isDisabled={
+                !handlePermission({
+                  resource: Resource.invoice,
+                  actions: [Action.VIEW_DETAILS, Action.PRINT],
+                })
+              }
             >
               <DropdownTrigger>
                 <Button isIconOnly size="sm" variant="light">
@@ -162,19 +174,19 @@ const InvoiceView: React.FC = () => {
               </DropdownTrigger>
               <DropdownMenu disabledKeys={disabledKeys}>
                 <DropdownItem
-                  key="view"
+                  key={Action.VIEW_DETAILS}
                   startContent={<Icon icon="lucide:eye" />}
                   onPress={() => onOpenView(invoice)}
                 >
-                  {t("action.view")}
+                  {t(`action.${Action.VIEW_DETAILS}`)}
                 </DropdownItem>
                 <DropdownItem
-                  key="print"
+                  key={Action.PRINT}
                   startContent={<Icon icon="lucide:printer" />}
                   color="danger"
                   onPress={() => onOpenPrint(invoice)}
                 >
-                  {t("action.print")}
+                  {t(`action.${Action.PRINT}`)}
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -214,26 +226,22 @@ const InvoiceView: React.FC = () => {
           tableEmptyContent={emptyContent}
         />
 
-        {detail && (
-          <DetailModal
-            isOpen={detailModal.isOpen}
-            onClose={onCloseView}
-            onOpenChange={detailModal.onOpenChange}
-            invNo={detail.invNo || ""}
-            details={detail.details || []}
-          />
-        )}
+        <DetailModal
+          isOpen={detailModal.isOpen}
+          onClose={onCloseView}
+          onOpenChange={detailModal.onOpenChange}
+          invNo={detail?.invNo || ""}
+          details={detail?.details || []}
+        />
 
-        {detail && (
-          <DetailPrint
-            patient={detail.patient}
-            isOpen={detailPrint.isOpen}
-            onClose={onClosePrint}
-            onOpenChange={detailPrint.onOpenChange}
-            invNo={detail.invNo || ""}
-            value={detail}
-          />
-        )}
+        <DetailPrint
+          patient={detail?.patient}
+          isOpen={detailPrint.isOpen}
+          onClose={onClosePrint}
+          onOpenChange={detailPrint.onOpenChange}
+          invNo={detail?.invNo || ""}
+          value={detail}
+        />
       </div>
     </>
   );

@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, Post, Put, Req } from '@nestjs/common';
+import { UserWithoutPassword } from '@repo/entities';
 import type { Request } from 'express';
-import { UsePublic } from 'src/guards/jwt-auth.guard';
+import { GetUser } from 'src/common/decorators';
+import { UsePublic } from 'src/common/guards/jwt-auth.guard';
 import { LoginUserDto, UpdateUserDto } from 'src/user/user.dto';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
-import { GetUser } from 'src/decorators';
-import { UserWithoutPassword } from '@repo/entities';
 
 @Controller('auth')
 export class AuthController {

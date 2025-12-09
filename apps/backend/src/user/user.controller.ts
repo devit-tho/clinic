@@ -4,24 +4,25 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
   Req,
 } from '@nestjs/common';
+import { Role, UserWithoutPassword } from '@repo/entities';
+import type { Request } from 'express';
+import { GetUser } from 'src/common/decorators';
+import { UsePublic } from 'src/common/guards/jwt-auth.guard';
+import { Roles } from 'src/common/guards/role.guard';
 import {
   ChangePasswordDto,
   CreateUserDto,
   PermissionDto,
   ResetPasswordDto,
 } from './user.dto';
-import type { Request } from 'express';
-import { UsePublic } from 'src/guards/jwt-auth.guard';
 import { UserService } from './user.service';
-import { GetUser } from 'src/decorators';
-import { UserWithoutPassword } from '@repo/entities';
 
 @Controller('user')
+@Roles(Role.ADMIN)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -35,18 +36,17 @@ export class UserController {
     return this.userService.getById(id);
   }
 
-  @Get(':id/permission')
-  async getPermission(@Param('id') id: string) {
-    return this.userService.getPermission(id);
+  @Get(':id/permissions')
+  async getPermissions(@Param('id') id: string) {
+    return this.userService.getPermissions(id);
   }
 
-  @Patch(':userId/permission/:id')
-  async updatePermission(
+  @Post(':userId/permissions')
+  async updatePermissions(
     @Param('userId') userId: string,
-    @Param('id') id: string,
     @Body() dto: PermissionDto,
   ) {
-    return this.userService.updatePermission(userId, id, dto);
+    return this.userService.updatePermissions(userId, dto);
   }
 
   @Post()

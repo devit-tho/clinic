@@ -1,3 +1,4 @@
+import { generateObjectId } from "@/utils/object-id";
 import { swrOptions } from "@/utils/swr-options";
 import { Patient, PatientInvoice, RecentPatient } from "@repo/entities";
 import { CreateOrUpdatePatientType } from "@repo/schemas";
@@ -67,16 +68,20 @@ export async function getPatient(id: string) {
 }
 
 export async function createPatient(dto: CreateOrUpdatePatientType) {
-  const patient = getData<Patient>(
-    await postRequest({
-      path: "/patient",
-      data: dto,
-    })
-  );
+  await postRequest({
+    path: "/patient",
+    data: dto,
+  });
+
+  const newData: Patient = {
+    ...dto,
+    createdAt: new Date(),
+    id: generateObjectId(),
+  };
 
   mutate<Patient[]>("/patient", (v) => {
     if (!v) return [];
-    return [...v, patient];
+    return [newData, ...v];
   });
 }
 

@@ -1,11 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { ZodValidationPipe } from 'nestjs-zod';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from 'src/auth/auth.module';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { DetailModule } from './detail/detail.module';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { InvoiceModule } from './invoice/invoice.module';
 import { PatientModule } from './patient/patient.module';
 import { StorageModule } from './storage/storage.module';
@@ -37,6 +38,7 @@ export class GlobalModule {}
   controllers: [],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
   ],
 })

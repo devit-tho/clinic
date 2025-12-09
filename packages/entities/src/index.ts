@@ -37,7 +37,7 @@ type Detail = Omit<DetailPrisma, DefaultField>;
 
 type Treatment = Omit<TreatmentPrisma, DefaultField>;
 
-type Permission = Pick<PermissionPrisma, "id" | "values">;
+type Permission = Pick<PermissionPrisma, "id" | "resource" | "actions">;
 
 type Payment = Omit<PaymentPrisma, DefaultField>;
 
@@ -49,7 +49,7 @@ type PlaceOfBirth = {
 };
 
 interface UserWithoutPassword extends Omit<User, "password"> {
-  permission: Pick<Permission, "id" | "values"> | null;
+  permissions: Pick<Permission, "id" | "resource" | "actions">[];
   placeOfBirth: PlaceOfBirth | null;
   _count: {
     patients: number;
@@ -61,9 +61,9 @@ interface LoginResponse {
   token: string;
 }
 
-type UserPermission = Pick<Permission, "id" | "values"> & {
-  user: Pick<User, "alias">;
-};
+type UserPermission = (Pick<Permission, "resource" | "actions"> & {
+  id?: string;
+})[];
 
 type UserResponse = Pick<User, "username" | "password">;
 
@@ -92,18 +92,21 @@ const Gender = createEnum<GenderPrisma>()({
   Male: "Male",
   Female: "Female",
 });
+type Gender = (typeof Gender)[keyof typeof Gender];
 
 const Role = createEnum<RolePrisma>()({
   ADMIN: "ADMIN",
   DOCTOR: "DOCTOR",
   STAFF: "STAFF",
 });
+type Role = (typeof Role)[keyof typeof Role];
 
 const Status = createEnum<StatusPrisma>()({
   NO_DETAILS: "NO_DETAILS",
   PENDING: "PENDING",
   SUCCESS: "SUCCESS",
 });
+type Status = (typeof Status)[keyof typeof Status];
 
 const fields: DefaultField[] = [
   "isDeleted",

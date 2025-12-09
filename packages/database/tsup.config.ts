@@ -6,4 +6,7 @@ export default defineConfig(() => ({
   dts: true,
   sourcemap: true,
   clean: true,
+  // noExternal: ["@prisma/client", "prisma"],
+  // external: ["@prisma/client"],
+  // skipNodeModulesBundle: true,
 }));

@@ -97,14 +97,19 @@
   "action": {
     "title": "សកម្មភាព",
     "view": "មើល",
-    "view_invoices": "មើលវិក្កយបត្រ",
-    "view_details": "មើលលម្អិត",
     "create": "បង្កើត",
-    "edit": "កែសម្រួល",
+    "edit": "កែប្រែ",
     "print": "បោះពុម្ព",
     "delete": "លុប",
     "close": "បិទ",
-    "cancel": "បោះបង់"
+    "cancel": "បោះបង់",
+    "read": "អាន",
+    "update": "ធ្វើបច្ចុប្បន្នភាព",
+    "view-invoices": "មើលវិក្កយបត្រ",
+    "create-invoices": "បង្កើតវិក្កយបត្រ",
+    "update-invoices": "ធ្វើបច្ចុប្បន្នភាពវិក្កយបត្រ",
+    "delete-invoices": "លុបវិក្កយបត្រ",
+    "view-details": "មើលព័ត៌មានលម្អិត"
   },
   "patient_invoice": {
     "title": "វិក្កយបត្រអ្នកជំងឺ",

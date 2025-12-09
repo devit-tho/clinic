@@ -5,12 +5,10 @@ import CustomBreadcrumbs from "@/components/custom-breadcrumb/custom-breadcrumbs
 import { DeleteItem } from "@/components/delete-item";
 import { EmptyContent } from "@/components/empty-content";
 import Iconify from "@/components/iconify";
-import config from "@/config";
 import { usePermissionAccess } from "@/hooks/use-permission-access";
 import { useLocales } from "@/locales";
 import { useRouter } from "@/routes/hooks";
 import paths from "@/routes/paths";
-import { PATIENT } from "@/utils/permission-data";
 import {
   addToast,
   Button,
@@ -21,6 +19,7 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { Patient } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 import lowerCase from "lodash/lowerCase";
 import { useState } from "react";
 
@@ -66,7 +65,7 @@ const PatientListView: React.FC = () => {
   async function deletePatient() {
     await deletePatientApi(deletedPatient as Patient);
     addToast({
-      description: "Patient deleted successfully",
+      description: t("patient_deleted_success"),
       color: "success",
     });
     onClose();
@@ -81,23 +80,43 @@ const PatientListView: React.FC = () => {
       case "actions":
         const disabledKeys = [];
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.UPDATE])) {
-          disabledKeys.push("edit");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.VIEW_INVOICES,
+          })
+        ) {
+          disabledKeys.push(Action.VIEW_INVOICES);
         }
 
-        if (handlePermission([config.ROLE.ADMIN, PATIENT.DELETE])) {
-          disabledKeys.push("delete");
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.UPDATE,
+          })
+        ) {
+          disabledKeys.push(Action.UPDATE);
+        }
+
+        if (
+          !handlePermission({
+            resource: Resource.patient,
+            actions: Action.DELETE,
+          })
+        ) {
+          disabledKeys.push(Action.DELETE);
         }
 
         return (
           <div className="relative flex items-center justify-end gap-2">
             <Dropdown
               aria-label="main action"
-              isDisabled={handlePermission([
-                config.ROLE.ADMIN,
-                PATIENT.UPDATE,
-                PATIENT.DELETE,
-              ])}
+              isDisabled={
+                !handlePermission({
+                  resource: Resource.patient,
+                  actions: [Action.VIEW_INVOICES, Action.UPDATE, Action.DELETE],
+                })
+              }
             >
               <DropdownTrigger aria-label="action btn trigger">
                 <Button isIconOnly size="sm" variant="light">
@@ -106,16 +125,16 @@ const PatientListView: React.FC = () => {
               </DropdownTrigger>
               <DropdownMenu aria-label="action" disabledKeys={disabledKeys}>
                 <DropdownItem
-                  key="view"
+                  key={Action.VIEW_INVOICES}
                   aria-label="View patient"
                   startContent={<Iconify icon="solar:eye-bold-duotone" />}
                   onPress={() => viewInvoice(patient.id)}
                 >
-                  {t("action.view")}
+                  {t(`action.${Action.VIEW_INVOICES}`)}
                 </DropdownItem>
 
                 <DropdownItem
-                  key="edit"
+                  key={Action.UPDATE}
                   aria-label="Edit patient"
                   startContent={<Iconify icon="solar:pen-bold-duotone" />}
                   onPress={() => editPatient(patient.id)}
@@ -124,7 +143,7 @@ const PatientListView: React.FC = () => {
                 </DropdownItem>
 
                 <DropdownItem
-                  key="delete"
+                  key={Action.DELETE}
                   aria-label="Delete patient"
                   startContent={
                     <Iconify icon="solar:trash-bin-2-bold-duotone" />
@@ -135,7 +154,7 @@ const PatientListView: React.FC = () => {
                     onOpen();
                   }}
                 >
-                  {t("action.delete")}
+                  {t(`action.${Action.DELETE}`)}
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -172,7 +191,10 @@ const PatientListView: React.FC = () => {
           tableEmptyContent={emptyContent}
           renderCell={renderCell}
           dataName={t("patient")}
-          addItem={!handlePermission([config.ROLE.ADMIN, PATIENT.CREATE])}
+          addItem={handlePermission({
+            resource: Resource.patient,
+            actions: Action.CREATE,
+          })}
         />
 
         <DeleteItem

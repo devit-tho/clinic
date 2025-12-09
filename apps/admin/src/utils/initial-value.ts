@@ -28,6 +28,8 @@ export const invoiceDefaultValues: CreateOrUpdateInvoiceType = {
   discount: 0,
   deposit: 0,
   total: 0,
+  balance: 0,
+  defaultPayment: 0,
 };
 
 export const detailDefaultValues: CreateOrUpdateDetailType = {

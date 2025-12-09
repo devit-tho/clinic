@@ -1,5 +1,5 @@
 model Detail {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   invoice     Invoice   @relation(fields: [invoiceId], references: [id])
   invoiceId   String    @map("invoice_id") @db.ObjectId
   patient     Patient   @relation(fields: [patientId], references: [id])
@@ -8,16 +8,16 @@ model Detail {
   treatmentId String    @map("treatment_id") @db.ObjectId
   upper       Int       @default(0)
   lower       Int       @default(0)
-  
+
   /// @zod.custom.use(z.array(z.number().min(11).max(48)))
-  tooth       Int[]
-  isDeleted   Boolean   @default(false) @map("is_deleted")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  createdBy   String    @map("created_by") @db.ObjectId
-  updatedAt   DateTime? @map("updated_at")
-  updatedBy   String?   @map("updated_by") @db.ObjectId
-  deletedAt   DateTime? @map("deleted_at")
-  deletedBy   String?   @map("deleted_by") @db.ObjectId
+  tooth     Int[]
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at")
+  createdBy String    @map("created_by") @db.ObjectId
+  updatedAt DateTime? @map("updated_at")
+  updatedBy String?   @map("updated_by") @db.ObjectId
+  deletedAt DateTime? @map("deleted_at")
+  deletedBy String?   @map("deleted_by") @db.ObjectId
 
   @@map("details")
 }

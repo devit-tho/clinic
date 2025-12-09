@@ -4,7 +4,8 @@ import { useLocales } from "@/locales";
 
 import config from "@/config";
 import paths from "@/routes/paths";
-import { INVOICE, PATIENT, TREATMENT } from "@/utils/permission-data";
+import { Role } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 
 // ----------------------------------------------------------------
 
@@ -12,7 +13,8 @@ export interface List {
   path: string;
   title: string;
   icon?: React.ReactNode | string | IconifyIcon;
-  roles?: string[];
+  roles?: Role[];
+  permission?: { resource: Resource; actions: Action };
   childrens?: List[];
 }
 
@@ -54,24 +56,6 @@ export function useNavData() {
             },
           ],
         },
-        {
-          title: t("treatment"),
-          icon: "healthicons:water-treatment-outline",
-          roles: [config.ROLE.ADMIN, TREATMENT.DETAILS],
-          path: paths.dashboard.treatment.root,
-          childrens: [
-            {
-              title: t("menu_sub_list.list"),
-              path: paths.dashboard.treatment.root,
-              roles: [config.ROLE.ADMIN, TREATMENT.LIST],
-            },
-            {
-              title: t("menu_sub_list.create"),
-              path: paths.dashboard.treatment.create,
-              roles: [config.ROLE.ADMIN, TREATMENT.CREATE],
-            },
-          ],
-        },
       ],
     },
     {
@@ -81,25 +65,67 @@ export function useNavData() {
           title: t("patient"),
           icon: "fluent:patient-20-regular",
           path: paths.dashboard.patient.root,
-          roles: [config.ROLE.ADMIN, PATIENT.DETAILS],
+          roles: [Role.DOCTOR, Role.STAFF],
+          permission: {
+            resource: Resource.patient,
+            actions: Action.READ,
+          },
           childrens: [
             {
               title: t("menu_sub_list.list"),
               path: paths.dashboard.patient.root,
-              roles: [config.ROLE.ADMIN, PATIENT.LIST],
+              permission: {
+                resource: Resource.patient,
+                actions: Action.READ,
+              },
             },
             {
               title: t("menu_sub_list.create"),
               path: paths.dashboard.patient.create,
-              roles: [config.ROLE.ADMIN, PATIENT.CREATE],
+              permission: {
+                resource: Resource.patient,
+                actions: Action.CREATE,
+              },
             },
           ],
         },
         {
           title: t("invoice"),
           icon: "hugeicons:google-doc",
-          roles: [config.ROLE.ADMIN, INVOICE.DETAILS],
+          roles: [Role.DOCTOR, Role.STAFF],
+          permission: {
+            resource: Resource.invoice,
+            actions: Action.READ,
+          },
           path: paths.dashboard.invoice.root,
+        },
+        {
+          title: t("treatment"),
+          icon: "healthicons:water-treatment-outline",
+          roles: [Role.DOCTOR, Role.STAFF],
+          path: paths.dashboard.treatment.root,
+          permission: {
+            resource: Resource.treatment,
+            actions: Action.READ,
+          },
+          childrens: [
+            {
+              title: t("menu_sub_list.list"),
+              path: paths.dashboard.treatment.root,
+              permission: {
+                resource: Resource.treatment,
+                actions: Action.LIST,
+              },
+            },
+            {
+              title: t("menu_sub_list.create"),
+              path: paths.dashboard.treatment.create,
+              permission: {
+                resource: Resource.treatment,
+                actions: Action.CREATE,
+              },
+            },
+          ],
         },
       ],
     },

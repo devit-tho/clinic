@@ -7,10 +7,11 @@ import { db } from '@repo/database';
 import {
   InvoiceDetail,
   InvoiceDetailPatient,
-  Status,
   UserWithoutPassword,
   excludeFields,
 } from '@repo/entities';
+import omit from 'lodash/omit';
+import pick from 'lodash/pick';
 import { InvoiceDetailDto, InvoiceDto } from './invoice.dto';
 
 @Injectable()
@@ -39,11 +40,17 @@ export class InvoiceService {
   }
 
   async getById(id: string): Promise<InvoiceDetail> {
-    const invoice = await db.invoice.findUnique({
+    const invoice = await db.invoice.findFirst({
       where: { id },
       include: {
         payment: {
-          omit: excludeFields,
+          omit: omit(excludeFields, [
+            'createdBy',
+            'updatedAt',
+            'updatedBy',
+            'deletedAt',
+            'deletedBy',
+          ]),
         },
         details: {
           include: {
@@ -80,7 +87,7 @@ export class InvoiceService {
   async create(user: UserWithoutPassword, dto: InvoiceDto): Promise<string> {
     const { discount = 0, total = 0, patientId, status } = dto;
 
-    const newDeposit = dto.newDeposit || 0;
+    const newDeposit = dto.deposit || 0;
 
     const patient = await db.patient.findUnique({
       where: {
@@ -106,7 +113,6 @@ export class InvoiceService {
       const paymentTransaction = await ctx.payment.create({
         data: {
           balance,
-          currentPayment,
           total,
           deposit: newDeposit,
           discount,
@@ -141,7 +147,7 @@ export class InvoiceService {
   ) {
     const { details, invoice } = dto;
 
-    const { discount, patientId, status, newDeposit: firstDeposit } = invoice;
+    const { discount, patientId, status, deposit: firstDeposit } = invoice;
 
     const newDeposit = firstDeposit ?? 0;
 
@@ -153,6 +159,8 @@ export class InvoiceService {
         id: true,
       },
     });
+
+    if (!patient) throw new NotFoundException('Patient not found');
 
     const invNo = await this.getInvNo();
 
@@ -171,8 +179,6 @@ export class InvoiceService {
     if (treatments.length !== details.length) {
       throw new BadRequestException('Some of treatments not found');
     }
-
-    if (!patient) throw new NotFoundException('Patient not found');
 
     const newInvoiceWithDetails = await db.$transaction(async (ctx) => {
       const payment = await ctx.payment.create({
@@ -201,7 +207,7 @@ export class InvoiceService {
         treatments.map((treatment) => [treatment.id, treatment.price]),
       );
 
-      let total = 0;
+      let defaultPayment = 0;
 
       for (const detail of details) {
         const price = treatmentMaps.get(detail.treatmentId);
@@ -209,7 +215,7 @@ export class InvoiceService {
         if (!price) throw new NotFoundException('Treatment not found');
 
         const number = detail.lower + detail.upper;
-        total += number * price;
+        defaultPayment += number * price;
 
         await ctx.detail.create({
           data: {
@@ -224,15 +230,15 @@ export class InvoiceService {
         });
       }
 
-      if (discount > total) {
+      if (discount > defaultPayment) {
         throw new BadRequestException('Discount must be less than total');
       }
 
-      const currentPayment = total - discount;
+      const balance = defaultPayment - newDeposit;
 
-      const balance = currentPayment - newDeposit;
+      const total = balance - discount;
 
-      if (newDeposit > currentPayment) {
+      if (newDeposit > balance) {
         throw new BadRequestException(
           'New deposit is greater than current payment',
         );
@@ -241,7 +247,7 @@ export class InvoiceService {
       await ctx.payment.update({
         data: {
           balance,
-          currentPayment,
+          defaultPayment,
           total,
           deposit: newDeposit,
           discount,
@@ -252,24 +258,13 @@ export class InvoiceService {
         },
       });
 
-      if (newDeposit === currentPayment) {
-        await ctx.invoice.update({
-          data: {
-            status: Status.SUCCESS,
-          },
-          where: {
-            id: invoiceTx.id,
-          },
-        });
-      }
-
       const newInvoice = await ctx.invoice.findUnique({
         where: {
           id: invoiceTx.id,
         },
         include: {
           payment: {
-            omit: excludeFields,
+            omit: pick(excludeFields, ['isDeleted', 'createdAt']),
           },
           details: {
             include: {
@@ -289,53 +284,76 @@ export class InvoiceService {
     return newInvoiceWithDetails;
   }
 
-  async update(id: string, dto: InvoiceDto) {
-    const { discount, patientId } = dto;
+  async update(user: UserWithoutPassword, id: string, dto: InvoiceDetailDto) {
+    const { invoice, details } = dto;
+    const { discount, patientId, newDeposit } = invoice;
 
-    const newDeposit = dto.newDeposit || 0;
-
-    const invoice = await db.invoice.findFirst({
-      where: {
-        id,
-        patientId,
-      },
-      select: {
-        paymentId: true,
-        payment: true,
-      },
-    });
-
-    if (!invoice) throw new NotFoundException();
-
-    // Update balance
-    await db.$transaction(async () => {
-      const newPayment = await db.payment.update({
-        data: {
-          discount,
-          currentPayment: invoice.payment.total - discount,
-          deposit: invoice.payment.deposit + newDeposit,
-          balance: invoice.payment.balance + newDeposit,
-        },
+    await db.$transaction(async (ctx) => {
+      const patient = await ctx.patient.findUnique({
         where: {
-          id: invoice.paymentId,
+          id: patientId,
+        },
+      });
+
+      if (!patient) throw new NotFoundException('Patient not found');
+
+      const invoice = await ctx.invoice.findFirst({
+        where: {
+          id,
+          patientId,
         },
         select: {
-          currentPayment: true,
-          deposit: true,
+          id: true,
+          paymentId: true,
+          payment: true,
         },
       });
 
-      // Update payment status if there is correct
-      const paymentSuccess = newPayment.currentPayment === newPayment.deposit;
+      if (!invoice) throw new NotFoundException();
 
-      await db.payment.update({
-        data: {
-          status: paymentSuccess ? Status.SUCCESS : Status.PENDING,
-        },
+      if (!newDeposit) return;
+
+      // Recheck treatment again
+      const treatments = await ctx.treatment.findMany({
         where: {
-          id: invoice.paymentId,
+          id: {
+            in: details.map((detail) => detail.treatmentId),
+          },
+        },
+        select: {
+          id: true,
+          price: true,
         },
       });
+
+      if (treatments.length !== details.length) {
+        throw new BadRequestException('Some of treatments not found');
+      }
+
+      const treatmentMaps = new Map<string, number>(
+        treatments.map((treatment) => [treatment.id, treatment.price]),
+      );
+
+      for (const detail of details) {
+        const price = treatmentMaps.get(detail.treatmentId);
+
+        if (!price) throw new NotFoundException('Treatment not found');
+
+        if (detail.id) {
+        } else {
+          await ctx.detail.create({
+            data: {
+              patientId,
+              treatmentId: detail.treatmentId,
+              invoiceId: invoice.id,
+              tooth: detail.tooth,
+              upper: detail.upper,
+              lower: detail.lower,
+              createdBy: user.id,
+            },
+          });
+        }
+      }
     });
   }
 

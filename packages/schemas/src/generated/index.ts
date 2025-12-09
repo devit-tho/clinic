@@ -3,7 +3,7 @@
  * Auto-generated. Do not edit.
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 // File: DetailScalarFieldEnum.schema.ts
 
 export const DetailScalarFieldEnumSchema = z.enum(['id', 'invoiceId', 'patientId', 'treatmentId', 'upper', 'lower', 'tooth', 'isDeleted', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy'])
@@ -24,13 +24,13 @@ export type PatientScalarFieldEnum = z.infer<typeof PatientScalarFieldEnumSchema
 
 // File: PaymentScalarFieldEnum.schema.ts
 
-export const PaymentScalarFieldEnumSchema = z.enum(['id', 'total', 'discount', 'currentPayment', 'deposit', 'balance', 'status', 'isDeleted', 'createdAt'])
+export const PaymentScalarFieldEnumSchema = z.enum(['id', 'defaultPayment', 'discount', 'deposit', 'balance', 'total', 'status', 'isDeleted', 'createdAt'])
 
 export type PaymentScalarFieldEnum = z.infer<typeof PaymentScalarFieldEnumSchema>;
 
 // File: PermissionScalarFieldEnum.schema.ts
 
-export const PermissionScalarFieldEnumSchema = z.enum(['id', 'values', 'userId', 'isDeleted', 'createdAt'])
+export const PermissionScalarFieldEnumSchema = z.enum(['id', 'resource', 'actions', 'userId', 'isDeleted', 'createdAt'])
 
 export type PermissionScalarFieldEnum = z.infer<typeof PermissionScalarFieldEnumSchema>;
 
@@ -148,11 +148,11 @@ export type PatientType = z.infer<typeof PatientSchema>;
 
 export const PaymentSchema = z.object({
   id: z.string(),
-  total: z.number(),
+  defaultPayment: z.number(),
   discount: z.number(),
-  currentPayment: z.number(),
   deposit: z.number(),
   balance: z.number(),
+  total: z.number(),
   status: StatusSchema.default("NO_DETAILS"),
   isDeleted: z.boolean(),
   createdAt: z.date(),
@@ -165,7 +165,8 @@ export type PaymentType = z.infer<typeof PaymentSchema>;
 
 export const PermissionSchema = z.object({
   id: z.string(),
-  values: z.array(z.string()),
+  resource: z.string(),
+  actions: z.array(z.string()),
   userId: z.string(),
   isDeleted: z.boolean(),
   createdAt: z.date(),

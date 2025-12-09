@@ -25,7 +25,7 @@ const NavItem: React.FC<NavItemProp> = ({
 }) => {
   const { handlePermission } = usePermissionAccess();
 
-  const { icon, childrens, path, roles } = data;
+  const { icon, childrens, path, permission } = data;
 
   const renderContent = (
     <>
@@ -69,8 +69,8 @@ const NavItem: React.FC<NavItemProp> = ({
     ...other,
   };
 
-  if (roles && handlePermission(roles)) {
-    return;
+  if (permission && !handlePermission(permission)) {
+    return null;
   }
 
   return (

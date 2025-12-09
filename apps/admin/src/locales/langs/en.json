@@ -36,6 +36,7 @@
   "number": "Number",
   "type": "Type",
   "price": "Price",
+  "print": "Print",
   "total": "Total",
   "discount": "Discount",
   "balance": "Balance",
@@ -99,14 +100,19 @@
   "action": {
     "title": "Actions",
     "view": "View",
-    "view_invoices": "View Invoices",
-    "view_details": "View Details",
     "create": "Create",
     "edit": "Edit",
     "print": "Print",
     "delete": "Delete",
     "close": "Close",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "read": "Read",
+    "update": "Update",
+    "view-invoices": "View Invoices",
+    "create-invoices": "Create Invoices",
+    "update-invoices": "Update Invoices",
+    "delete-invoices": "Delete Invoices",
+    "view-details": "View Details"
   },
   "patient_invoice": {
     "title": "Patient Invoice",

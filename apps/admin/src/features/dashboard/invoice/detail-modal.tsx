@@ -27,6 +27,8 @@ const DetailModal: React.FC<
     { name: t("detail.teeth"), field: "tooth" },
     { name: t("detail.upper"), field: "upper" },
     { name: t("detail.lower"), field: "lower" },
+    { name: t("number"), field: "number" },
+    { name: t("total"), field: "total" },
   ];
 
   const total = details.reduce<number>((pv, cv) => {
@@ -39,11 +41,19 @@ const DetailModal: React.FC<
 
     const tooth = detail.tooth.join(", ");
 
+    const number = detail.upper + detail.lower;
+
     switch (columnKey) {
       case "type":
         return <span>{detail.treatment.type}</span>;
+      case "price":
+        return <span>$ {formatPrice(detail.treatment.price)}</span>;
       case "tooth":
         return <span>{tooth}</span>;
+      case "number":
+        return <span>{number}</span>;
+      case "total":
+        return <span>$ {formatPrice(detail.treatment.price * number)}</span>;
       default:
         return cellValue;
     }
@@ -69,7 +79,15 @@ const DetailModal: React.FC<
             columns={columns}
             renderCell={renderCell}
             dataName="Details"
-            invisibleColumns={["type", "price", "tooth", "upper", "lower"]}
+            invisibleColumns={[
+              "type",
+              "price",
+              "tooth",
+              "upper",
+              "lower",
+              "number",
+              "total",
+            ]}
             tableDataLoading={false}
           />
         </ModalBody>

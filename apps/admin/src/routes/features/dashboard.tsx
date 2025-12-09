@@ -1,10 +1,11 @@
 import AuthGuard from "@/auth/guard/auth-guard";
+import { PermissionGuard } from "@/auth/guard/permission-guard";
 import RoleBasedGuard from "@/auth/guard/role-based-guard";
 import LoadingData from "@/components/loading/loading-data";
-import config from "@/config";
 import { DashboardLayout } from "@/layouts/dashboard";
 import { ActionRoute, DashboardRoute, RootRoute } from "@/routes/paths";
-import { PATIENT, TREATMENT } from "@/utils/permission-data";
+import { Role } from "@repo/entities";
+import { Action, Resource } from "@repo/permissions";
 import { lazy, Suspense } from "react";
 import { Outlet, RouteObject } from "react-router-dom";
 
@@ -71,7 +72,7 @@ export const dashboardRoutes: RouteObject[] = [
       {
         path: DashboardRoute.USER,
         element: (
-          <RoleBasedGuard roles={[config.ROLE.ADMIN]}>
+          <RoleBasedGuard roles={[Role.ADMIN]}>
             <Outlet />
           </RoleBasedGuard>
         ),
@@ -94,25 +95,31 @@ export const dashboardRoutes: RouteObject[] = [
       {
         path: DashboardRoute.PATIENT,
         element: (
-          <RoleBasedGuard roles={[config.ROLE.ADMIN, PATIENT.DETAILS]}>
+          <RoleBasedGuard roles={[Role.DOCTOR, Role.STAFF]}>
             <Outlet />
           </RoleBasedGuard>
         ),
         children: [
           {
             element: (
-              <RoleBasedGuard roles={[config.ROLE.ADMIN, PATIENT.LIST]}>
+              <PermissionGuard
+                resource={Resource.patient}
+                actions={Action.READ}
+              >
                 <PatientListPage />
-              </RoleBasedGuard>
+              </PermissionGuard>
             ),
             index: true,
           },
           {
             path: ActionRoute.CREATE,
             element: (
-              <RoleBasedGuard roles={[config.ROLE.ADMIN, PATIENT.CREATE]}>
+              <PermissionGuard
+                resource={Resource.patient}
+                actions={Action.CREATE}
+              >
                 <PatientCreatePage />
-              </RoleBasedGuard>
+              </PermissionGuard>
             ),
           },
           {
@@ -121,9 +128,7 @@ export const dashboardRoutes: RouteObject[] = [
               {
                 path: DashboardRoute.INVOICE,
                 element: (
-                  <RoleBasedGuard
-                    roles={[config.ROLE.ADMIN, PATIENT.VIEW_INVOICES]}
-                  >
+                  <RoleBasedGuard roles={[Role.DOCTOR, Role.STAFF]}>
                     <Outlet />
                   </RoleBasedGuard>
                 ),
@@ -135,11 +140,12 @@ export const dashboardRoutes: RouteObject[] = [
                   {
                     path: ActionRoute.CREATE,
                     element: (
-                      <RoleBasedGuard
-                        roles={[config.ROLE.ADMIN, PATIENT.CREATE_INVOICES]}
+                      <PermissionGuard
+                        resource={Resource.invoice}
+                        actions={Action.CREATE_INVOICES}
                       >
                         <PatientInvoiceCreatePage />
-                      </RoleBasedGuard>
+                      </PermissionGuard>
                     ),
                   },
                   {
@@ -148,11 +154,12 @@ export const dashboardRoutes: RouteObject[] = [
                       {
                         path: ActionRoute.EDIT,
                         element: (
-                          <RoleBasedGuard
-                            roles={[config.ROLE.ADMIN, PATIENT.UPDATE_INVOICES]}
+                          <PermissionGuard
+                            resource={Resource.invoice}
+                            actions={Action.UPDATE_INVOICES}
                           >
                             <PatientInvoiceEditPage />
-                          </RoleBasedGuard>
+                          </PermissionGuard>
                         ),
                       },
                     ],
@@ -162,9 +169,12 @@ export const dashboardRoutes: RouteObject[] = [
               {
                 path: ActionRoute.EDIT,
                 element: (
-                  <RoleBasedGuard roles={[config.ROLE.ADMIN, PATIENT.UPDATE]}>
+                  <PermissionGuard
+                    resource={Resource.patient}
+                    actions={Action.UPDATE}
+                  >
                     <PatientEditPage />
-                  </RoleBasedGuard>
+                  </PermissionGuard>
                 ),
               },
             ],
@@ -174,25 +184,31 @@ export const dashboardRoutes: RouteObject[] = [
       {
         path: DashboardRoute.TREATMENT,
         element: (
-          <RoleBasedGuard roles={[config.ROLE.ADMIN, TREATMENT.DETAILS]}>
+          <RoleBasedGuard roles={[Role.DOCTOR, Role.STAFF]}>
             <Outlet />
           </RoleBasedGuard>
         ),
         children: [
           {
             element: (
-              <RoleBasedGuard roles={[config.ROLE.ADMIN, TREATMENT.LIST]}>
+              <PermissionGuard
+                resource={Resource.treatment}
+                actions={Action.LIST}
+              >
                 <TreatmentListPage />
-              </RoleBasedGuard>
+              </PermissionGuard>
             ),
             index: true,
           },
           {
             path: ActionRoute.CREATE,
             element: (
-              <RoleBasedGuard roles={[config.ROLE.ADMIN, TREATMENT.CREATE]}>
+              <PermissionGuard
+                resource={Resource.treatment}
+                actions={Action.CREATE}
+              >
                 <TreatmentCreatePage />
-              </RoleBasedGuard>
+              </PermissionGuard>
             ),
           },
           {
@@ -201,16 +217,26 @@ export const dashboardRoutes: RouteObject[] = [
               {
                 path: ActionRoute.EDIT,
                 element: (
-                  <RoleBasedGuard roles={[config.ROLE.ADMIN, TREATMENT.UPDATE]}>
+                  <PermissionGuard
+                    resource={Resource.treatment}
+                    actions={Action.UPDATE}
+                  >
                     <TreatmentEditPage />
-                  </RoleBasedGuard>
+                  </PermissionGuard>
                 ),
               },
             ],
           },
         ],
       },
-      { path: DashboardRoute.INVOICE, element: <InvoicePage /> },
+      {
+        path: DashboardRoute.INVOICE,
+        element: (
+          <PermissionGuard resource={Resource.invoice} actions={Action.READ}>
+            <InvoicePage />
+          </PermissionGuard>
+        ),
+      },
       { path: DashboardRoute.SETTINGS, element: <SettingsPage /> },
     ],
   },

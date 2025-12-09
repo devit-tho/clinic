@@ -1,13 +1,13 @@
 model Payment {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  total          Float    @default(0)
+  defaultPayment Float    @default(0) @map("default_payment")
   discount       Float    @default(0)
-  currentPayment Float    @default(0)
   deposit        Float    @default(0)
   balance        Float    @default(0)
+  total          Float    @default(0)
   status         Status   @default(NO_DETAILS)
-  isDeleted      Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  isDeleted      Boolean  @default(false) @map("is_deleted")
+  createdAt      DateTime @default(now()) @map("created_at")
 
   invoice Invoice?
 

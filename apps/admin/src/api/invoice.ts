@@ -77,11 +77,10 @@ export async function createInvoice(data: CreateOrUpdateInvoiceType) {
 export async function createInvoiceWithDetails(
   data: CreateOrUpdateInvoiceDetailType
 ) {
-  // return postRequest({
-  //   path: "/invoice/detail",
-  //   data,
-  // });
-  return data;
+  return postRequest({
+    path: "/invoice/detail",
+    data,
+  });
 }
 
 export async function deleteInvoice(invoice: Invoice) {
