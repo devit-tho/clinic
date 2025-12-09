@@ -1,8 +1,8 @@
 {
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
-  "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build && ls -l apps/backend/dist",
-  "outputDirectory": "apps/backend/dist",
+  "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build",
+  "outputDirectory": "./dist",
   "routes": [
     {
       "src": "/(.*)",
