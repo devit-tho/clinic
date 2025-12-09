@@ -12,7 +12,7 @@
   },
   "scripts": {
     "dev": "env-cmd -f .env.development prisma generate && tsup --watch",
-    "build": "prisma generate && tsup",
+    "build": "env-cmd -f .env.development prisma generate && tsup",
     "db:push": "env-cmd -f .env.development prisma db push",
     "db:gen": "env-cmd -f .env.development prisma generate",
     "db:studio": "env-cmd -f .env.development prisma studio",
@@ -36,5 +36,5 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.6.0"
 }
