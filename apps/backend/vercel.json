@@ -2,7 +2,7 @@
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach -pt --all --include=packages/* run build",
-  "outputDirectory": "dist",
+  "outputDirectory": "apps/backend/dist",
   "routes": [
     {
       "src": "/(.*)",
