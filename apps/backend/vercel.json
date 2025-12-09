@@ -1,7 +1,7 @@
 {
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
-  "buildCommand": "yarn workspaces foreach --all --parallel --topological-dev --exclude @ackh-repo/admin run build",
+  "buildCommand": "yarn workspaces foreach --all --parallel --topological-dev --exclude @repo/admin run build",
   "outputDirectory": "apps/backend/dist",
   "routes": [
     {
