@@ -1,13 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build",
   "outputDirectory": "./dist",
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "vercel.entry.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-    }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/vercel.entry.js" }]
 }
