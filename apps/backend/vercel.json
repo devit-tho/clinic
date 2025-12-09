@@ -1,14 +1,8 @@
 {
   "version": 2,
-  "installCommand": "corepack enable && yarn install",
-  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' turbo run build --filter=@repo/backend",
-  "outputDirectory": "apps/backend/dist",
-  "builds": [
-    {
-      "src": "dist/main.js",
-      "use": "@vercel/node"
-    }
-  ],
+  "installCommand": "corepack enable && yarn install --immutable",
+  "buildCommand": "yarn workspaces foreach -pt --all --include=packages/* run build",
+  "outputDirectory": "dist",
   "routes": [
     {
       "src": "/(.*)",
