@@ -1,18 +1,13 @@
 {
   "version": 2,
-  "installCommand": "corepack enable && yarn install --immutable",
-  "buildCommand": "yarn workspaces foreach -pt --all --include=packages/* run build && turbo run build --filter=@repo/backend",
-  "builds": [
-    {
-      "src": "dist/main.js",
-      "use": "@vercel/node"
+  "installCommand": "corepack enable && yarn install",
+  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' turbo run build --filter=@repo/backend",
+  "outputDirectory": "apps/backend/dist",
+  "functions": {
+    "api/main.js": {
+      "runtime": "nodejs18.x",
+      "memory": 1024
     }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "dist/main.js",
-      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-    }
-  ]
+  },
+  "routes": [{ "src": "/(.*)", "dest": "api/main.js" }]
 }
