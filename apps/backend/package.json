@@ -98,7 +98,7 @@
     "testEnvironment": "node"
   },
   "engines": {
-    "node": "22.x"
+    "node": "20.x"
   },
   "packageManager": "yarn@4.9.1"
 }
