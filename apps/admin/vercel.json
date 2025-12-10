@@ -3,5 +3,11 @@
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/backend --exclude clinic run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "index.html"
+    }
+  ]
 }
