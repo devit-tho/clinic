@@ -4,5 +4,5 @@
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "vercel.entry.js" }]
 }
