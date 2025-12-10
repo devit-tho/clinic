@@ -5,16 +5,15 @@ import {
   ExceptionFilter,
   HttpStatus,
 } from '@nestjs/common';
-import {
-  PrismaClientKnownRequestError,
-  PrismaClientValidationError,
-} from '@repo/database';
+import { Prisma } from '@repo/database';
 import { Response } from 'express';
 
-@Catch(PrismaClientKnownRequestError, PrismaClientValidationError)
+@Catch(Prisma.PrismaClientKnownRequestError, Prisma.PrismaClientValidationError)
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(
-    exception: PrismaClientKnownRequestError | PrismaClientValidationError,
+    exception:
+      | Prisma.PrismaClientKnownRequestError
+      | Prisma.PrismaClientValidationError,
     host: ArgumentsHost,
   ) {
     const ctx = host.switchToHttp();
@@ -22,7 +21,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
 
-    if (exception instanceof PrismaClientKnownRequestError) {
+    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2000':
           status = HttpStatus.BAD_REQUEST;
@@ -183,7 +182,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
           message = `Prisma error: ${exception.code}`;
           break;
       }
-    } else if (exception instanceof PrismaClientValidationError) {
+    } else if (exception instanceof Prisma.PrismaClientValidationError) {
       status = HttpStatus.BAD_REQUEST;
       message = `Prisma validation error: ${exception.message}`;
     }
