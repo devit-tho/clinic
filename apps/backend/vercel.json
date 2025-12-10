@@ -4,7 +4,7 @@
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build",
   "functions": {
-    "api/index.js": { "runtime": "nodejs20.x" }
+    "api/index.js": {}
   },
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
 }
