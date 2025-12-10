@@ -1,22 +1,27 @@
 import { NestFactory } from '@nestjs/core';
-import serverlessExpress from '@vendia/serverless-express';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import express from 'express';
+
+// IMPORTANT: adjust this path to your actual dist folder
 import { AppModule } from './app.module';
 
-let cachedServer: any;
+let server: express.Express;
 
-async function bootstrap() {
-  if (!cachedServer) {
-    const app = await NestFactory.create(AppModule);
-    app.enableCors(); // optional
-    await app.init();
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Create Nest server only once (cold start)
+  if (!server) {
+    const expressApp = express();
+    const nestApp = await NestFactory.create(
+      AppModule,
+      new ExpressAdapter(expressApp),
+    );
 
-    const expressInstance = app.getHttpAdapter().getInstance();
-    cachedServer = serverlessExpress({ app: expressInstance });
+    nestApp.enableCors();
+    await nestApp.init();
+
+    server = expressApp;
   }
-  return cachedServer;
-}
 
-export const handler = async (event: any, context: any) => {
-  const server = await bootstrap();
-  return server(event, context);
-};
+  return server(req, res);
+}

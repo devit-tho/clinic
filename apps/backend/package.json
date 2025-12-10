@@ -33,6 +33,7 @@
     "@repo/schemas": "*",
     "@repo/typescript-config": "*",
     "@vendia/serverless-express": "^4.12.6",
+    "@vercel/node": "^5.5.15",
     "aws-lambda": "^1.0.7",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.1.0",
