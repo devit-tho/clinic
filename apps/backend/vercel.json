@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
-  "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build && ls && cd dist && ls && mkdir -p api && cp ./dist/vercel-entry.js api/index.js",
+  "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build && mkdir -p api && cp vercel.entry.js api/index.js",
   "outputDirectory": ".",
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
 }
