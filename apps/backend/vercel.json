@@ -4,11 +4,5 @@
   "installCommand": "corepack enable && yarn set version berry && yarn install --immutable",
   "buildCommand": "yarn workspaces foreach --all --topological-dev --exclude @repo/admin --exclude clinic run build && mkdir -p api && cp dist/vercel-entry.js api/index.js",
   "outputDirectory": ".",
-  "functions": {
-    "api/index.js": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [{ "source": "/(.*)", "destination": "vercel.entry.js" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
 }
