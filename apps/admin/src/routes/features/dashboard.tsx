@@ -1,7 +1,7 @@
 import AuthGuard from "@/auth/guard/auth-guard";
 import { PermissionGuard } from "@/auth/guard/permission-guard";
 import RoleBasedGuard from "@/auth/guard/role-based-guard";
-import LoadingData from "@/components/loading/loading-data";
+import { SplashScreen } from "@/components/loading";
 import { DashboardLayout } from "@/layouts/dashboard";
 import { ActionRoute, DashboardRoute, RootRoute } from "@/routes/paths";
 import { Role } from "@repo/entities";
@@ -61,7 +61,7 @@ export const dashboardRoutes: RouteObject[] = [
     element: (
       <AuthGuard>
         <DashboardLayout>
-          <Suspense fallback={<LoadingData />}>
+          <Suspense fallback={<SplashScreen />}>
             <Outlet />
           </Suspense>
         </DashboardLayout>

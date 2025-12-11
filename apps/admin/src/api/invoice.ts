@@ -9,16 +9,18 @@ import useSWR, { mutate } from "swr";
 import { deleteRequest, fetcher, getData, getRequest, postRequest } from ".";
 
 export function useInvoices() {
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, error, isValidating, mutate } = useSWR(
     "/invoice",
     fetcher<InvoiceDetailPatient[]>,
     swrOptions
   );
 
   return {
-    datas: data || [],
-    loading: isLoading,
-    error: error,
+    invoicesData: data || [],
+    invoicesLoading: isLoading || isValidating,
+    invoicesError: error,
+    invoicesMutate: mutate,
+    invoicesEmpty: !isLoading && !data?.length,
   };
 }
 

@@ -16,10 +16,9 @@ export function usePatients() {
   } = useSWR("/patient", fetcher<Patient[]>, swrOptions);
 
   return {
-    patientsData: data,
-    patientsLoading: isLoading,
+    patientsData: data || [],
+    patientsLoading: isLoading || isValidating,
     patientsError: error,
-    patientsValidating: isValidating,
     patientsMutate,
     patientsEmpty: !isLoading && !data?.length,
   };
@@ -34,9 +33,8 @@ export function usePatient(id: string) {
 
   return {
     patientData: data,
-    patientLoading: isLoading,
+    patientLoading: isLoading || isValidating,
     patientError: error,
-    patientValidating: isValidating,
     patientMutate: mutate,
   };
 }

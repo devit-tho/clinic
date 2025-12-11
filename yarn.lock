@@ -5382,6 +5382,7 @@ __metadata:
     "@types/nprogress": "npm:^0.2.3"
     "@types/numeral": "npm:^2.0.5"
     "@types/react": "npm:^19.2.7"
+    "@types/react-csv": "npm:^1.1.10"
     "@types/react-dom": "npm:^19.2.3"
     "@types/react-is": "npm:^19.2.0"
     "@vitejs/plugin-react-swc": "npm:^3.10.2"
@@ -5403,6 +5404,7 @@ __metadata:
     numeral: "npm:^2.0.6"
     postcss: "npm:^8.5.6"
     react: "npm:19.2.1"
+    react-csv: "npm:^2.2.2"
     react-dom: "npm:19.2.1"
     react-hook-form: "npm:^7.68.0"
     react-i18next: "npm:^16.4.0"
@@ -6566,6 +6568,15 @@ __metadata:
   version: 1.2.7
   resolution: "@types/range-parser@npm:1.2.7"
   checksum: 10c0/361bb3e964ec5133fa40644a0b942279ed5df1949f21321d77de79f48b728d39253e5ce0408c9c17e4e0fd95ca7899da36841686393b9f7a1e209916e9381a3c
+  languageName: node
+  linkType: hard
+
+"@types/react-csv@npm:^1.1.10":
+  version: 1.1.10
+  resolution: "@types/react-csv@npm:1.1.10"
+  dependencies:
+    "@types/react": "npm:*"
+  checksum: 10c0/58d300aacccc70c67d2df538726983b4483f3b446db67687baa0026bd4d562cbb956a47eab49516bbe22b9bf8e9b92d1e28f608361a77b2ffa36825bd9c72295
   languageName: node
   linkType: hard
 
@@ -14148,6 +14159,13 @@ __metadata:
     defu: "npm:^6.1.4"
     destr: "npm:^2.0.3"
   checksum: 10c0/a2ead3b94bf033e35e4ea40d70062a09feddb8f589c3f5a8fe4e9342976974296aee9f6e9e72bd5e78e6ae4b7bc16dc244f63699fd7322c16314e3238db982c9
+  languageName: node
+  linkType: hard
+
+"react-csv@npm:^2.2.2":
+  version: 2.2.2
+  resolution: "react-csv@npm:2.2.2"
+  checksum: 10c0/287e7ba2085a32a0e65d7a19b9e063e43f06f75ab6ebc18bb52b518007a1d6ec5f5ce33fc7c4e290e3ea41cfb251657b6e62aadadc8d7ffcef7e53d43bf3eb69
   languageName: node
   linkType: hard
 

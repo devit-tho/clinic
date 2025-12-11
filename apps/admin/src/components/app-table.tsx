@@ -1,12 +1,15 @@
 import { useLocales } from "@/locales";
+import { activityHelper } from "@/utils/activity-helper";
+import { Button } from "@heroui/button";
 import {
-  Button,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Input,
-  Pagination,
+} from "@heroui/dropdown";
+import { Input } from "@heroui/input";
+import { Pagination } from "@heroui/pagination";
+import {
   Selection,
   SelectionMode,
   SortDescriptor,
@@ -16,14 +19,16 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from "@heroui/react";
+} from "@heroui/table";
+import { Tooltip } from "@heroui/tooltip";
 import clsx from "clsx";
 import capitalize from "lodash/capitalize";
 import lowerCase from "lodash/lowerCase";
-import * as React from "react";
+import { Activity, useCallback, useMemo, useState } from "react";
+import { CSVLink } from "react-csv";
 import { Link } from "react-router-dom";
 import Iconify from "./iconify";
-
+import { LoadingData } from "./loading";
 export interface Column {
   name: string;
   field: string;
@@ -46,13 +51,15 @@ interface AppTableProp<T = object> {
   filterName?: keyof T;
   exportCsv?: boolean;
   csvFileName?: string;
-  csvHeader?: { key: string; name: string }[];
+  csvHeader?: { key: string; label: string }[];
+  csvData?: object[];
+  reloadData?: () => void;
 }
 
 export default function AppTable<T extends { id?: string | number | null }>({
   columns,
   invisibleColumns = [],
-  datas,
+  datas = [],
   renderCell,
   tableEmptyContent = "Data not found",
   tableDataLoading,
@@ -63,26 +70,29 @@ export default function AppTable<T extends { id?: string | number | null }>({
   showBottomContent = true,
   shadow = "sm",
   filterName,
+  reloadData,
+  exportCsv,
+  csvFileName,
+  csvHeader = [],
+  csvData = [],
 }: AppTableProp<T>) {
   const { t, currentLang } = useLocales();
-  const [filterValue, setFilterValue] = React.useState("");
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
-    new Set([])
-  );
-  const [visibleColumns, setVisibleColumns] = React.useState<Selection>(
+  const [filterValue, setFilterValue] = useState("");
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set([]));
+  const [visibleColumns, setVisibleColumns] = useState<Selection>(
     new Set(invisibleColumns)
   );
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
-  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [sortDescriptor, setSortDescriptor] = useState<SortDescriptor>({
     column: "",
     direction: "ascending",
   });
 
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useState(1);
 
   const hasSearchFilter = Boolean(filterValue);
 
-  const headerColumns = React.useMemo(() => {
+  const headerColumns = useMemo(() => {
     if (visibleColumns === "all") return columns;
 
     return columns.filter((column) =>
@@ -90,7 +100,8 @@ export default function AppTable<T extends { id?: string | number | null }>({
     );
   }, [visibleColumns, currentLang]);
 
-  const filteredItems = React.useMemo(() => {
+  const filteredItems = useMemo(() => {
+    if (!datas.length) return [];
     let filteredDatas = [...datas];
 
     if (hasSearchFilter) {
@@ -106,14 +117,14 @@ export default function AppTable<T extends { id?: string | number | null }>({
 
   const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
-  const items = React.useMemo(() => {
+  const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
     return filteredItems.slice(start, end);
   }, [page, filteredItems, rowsPerPage]);
 
-  const sortedItems = React.useMemo(() => {
+  const sortedItems = useMemo(() => {
     return [...items].sort((a: T, b: T) => {
       const first = a[sortDescriptor.column as keyof T] as number;
       const second = b[sortDescriptor.column as keyof T] as number;
@@ -123,17 +134,17 @@ export default function AppTable<T extends { id?: string | number | null }>({
     });
   }, [sortDescriptor, items]);
 
-  const renderCells = React.useCallback(renderCell, [renderCell]);
+  const renderCells = useCallback(renderCell, [renderCell]);
 
-  const onNextPage = React.useCallback(() => {
+  const onNextPage = useCallback(() => {
     if (page < pages) setPage(page + 1);
   }, [page, pages]);
 
-  const onPreviousPage = React.useCallback(() => {
+  const onPreviousPage = useCallback(() => {
     if (page > 1) setPage(page - 1);
   }, [page]);
 
-  const onRowsPerPageChange = React.useCallback(
+  const onRowsPerPageChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       setRowsPerPage(Number(e.target.value));
       setPage(1);
@@ -141,7 +152,7 @@ export default function AppTable<T extends { id?: string | number | null }>({
     []
   );
 
-  const onSearchChange = React.useCallback((value?: string) => {
+  const onSearchChange = useCallback((value?: string) => {
     if (value) {
       setFilterValue(value);
       setPage(1);
@@ -150,12 +161,12 @@ export default function AppTable<T extends { id?: string | number | null }>({
     }
   }, []);
 
-  const onClear = React.useCallback(() => {
+  const onClear = useCallback(() => {
     setFilterValue("");
     setPage(1);
   }, []);
 
-  const topContent = React.useMemo(() => {
+  const topContent = useMemo(() => {
     if (!showTopContent) return null;
     return (
       <div className="flex flex-col gap-4">
@@ -170,6 +181,33 @@ export default function AppTable<T extends { id?: string | number | null }>({
             onValueChange={onSearchChange}
           />
           <div className="flex gap-3">
+            <Activity mode={activityHelper(exportCsv)}>
+              <CSVLink
+                filename={csvFileName || "data.csv"}
+                data={csvData}
+                headers={csvHeader}
+              >
+                <Tooltip content={t("app_table.export_csv")} placement="bottom">
+                  <Button isIconOnly color="primary" variant="flat">
+                    <Iconify icon="hugeicons:csv-02" width={24} />
+                  </Button>
+                </Tooltip>
+              </CSVLink>
+            </Activity>
+
+            <Activity mode={activityHelper(reloadData)}>
+              <Tooltip content={t("app_table.reload_data")} placement="bottom">
+                <Button
+                  color="primary"
+                  onPress={reloadData}
+                  isIconOnly
+                  variant="flat"
+                >
+                  <Iconify icon="lucide:refresh-ccw" />
+                </Button>
+              </Tooltip>
+            </Activity>
+
             <Dropdown aria-label="Columns dropdown">
               <DropdownTrigger className="hidden sm:flex">
                 <Button
@@ -194,7 +232,7 @@ export default function AppTable<T extends { id?: string | number | null }>({
                 ))}
               </DropdownMenu>
             </Dropdown>
-            {addItem && (
+            <Activity mode={activityHelper(addItem)}>
               <Button
                 color="primary"
                 endContent={<Iconify icon="fluent:add-12-filled" />}
@@ -203,12 +241,12 @@ export default function AppTable<T extends { id?: string | number | null }>({
               >
                 {t("app_table.add_new")}
               </Button>
-            )}
+            </Activity>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-small text-default-400">
-            {t("total")} {datas.length} {lowerCase(dataName)}
+            {t("total")} {datas.length || 0} {lowerCase(dataName)}
           </span>
           <label className="flex items-center text-small text-default-400">
             {t("app_table.row_page")}:
@@ -234,7 +272,7 @@ export default function AppTable<T extends { id?: string | number | null }>({
     currentLang,
   ]);
 
-  const bottomContent = React.useMemo(() => {
+  const bottomContent = useMemo(() => {
     if (!showBottomContent) return null;
     return (
       <div className="flex items-center justify-between p-2">
@@ -290,7 +328,6 @@ export default function AppTable<T extends { id?: string | number | null }>({
       selectionMode={selectionMode}
       sortDescriptor={sortDescriptor}
       topContent={topContent}
-      // topContentPlacement="outside"
       onSelectionChange={setSelectedKeys}
       onSortChange={setSortDescriptor}
     >
@@ -310,6 +347,7 @@ export default function AppTable<T extends { id?: string | number | null }>({
       <TableBody
         emptyContent={tableEmptyContent}
         isLoading={tableDataLoading}
+        loadingContent={<LoadingData />}
         items={sortedItems}
       >
         {sortedItems.map((item, ind) => (

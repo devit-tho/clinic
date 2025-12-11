@@ -1,4 +1,5 @@
 import GuestGuard from "@/auth/guard/guest-guard";
+import { SplashScreen } from "@/components/loading";
 import AuthLayoutClassic from "@/layouts/auth/classic";
 import { lazy, Suspense } from "react";
 import { Outlet, RouteObject } from "react-router-dom";
@@ -12,7 +13,7 @@ export const authRoutes: RouteObject[] = [
     element: (
       <GuestGuard>
         <AuthLayoutClassic>
-          <Suspense>
+          <Suspense fallback={<SplashScreen />}>
             <Outlet />
           </Suspense>
         </AuthLayoutClassic>

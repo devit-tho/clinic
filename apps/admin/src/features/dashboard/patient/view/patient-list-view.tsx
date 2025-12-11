@@ -20,6 +20,7 @@ import {
 } from "@heroui/react";
 import { Patient } from "@repo/entities";
 import { Action, Resource } from "@repo/permissions";
+import capitalize from "lodash/capitalize";
 import lowerCase from "lodash/lowerCase";
 import { useState } from "react";
 
@@ -34,7 +35,7 @@ const PatientListView: React.FC = () => {
 
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
-  const { patientsData, patientsLoading } = usePatients();
+  const { patientsData, patientsLoading, patientsMutate } = usePatients();
 
   const router = useRouter();
 
@@ -165,8 +166,6 @@ const PatientListView: React.FC = () => {
     }
   };
 
-  if (!patientsData) return null;
-
   return (
     <>
       <title>{title}</title>
@@ -195,6 +194,25 @@ const PatientListView: React.FC = () => {
             resource: Resource.patient,
             actions: Action.CREATE,
           })}
+          reloadData={patientsMutate}
+          exportCsv
+          csvFileName="patients.csv"
+          csvHeader={[
+            { key: "name", label: "Name" },
+            { key: "age", label: "Age" },
+            { key: "phoneNumber", label: "Phone Number" },
+            { key: "gender", label: "Gender" },
+          ]}
+          csvData={
+            patientsLoading
+              ? []
+              : patientsData.map((patient) => ({
+                  name: patient.name,
+                  age: patient.age,
+                  phoneNumber: patient.phoneNumber,
+                  gender: capitalize(patient.gender),
+                }))
+          }
         />
 
         <DeleteItem

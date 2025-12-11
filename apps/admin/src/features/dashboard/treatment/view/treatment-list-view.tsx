@@ -30,7 +30,8 @@ const TreatmentList: React.FC = () => {
     null
   );
   const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
-  const { treatmentsData, treatmentsLoading } = useTreatments();
+  const { treatmentsData, treatmentsLoading, treatmentsMutate } =
+    useTreatments();
   const router = useRouter();
 
   const columns: Column[] = [
@@ -134,8 +135,6 @@ const TreatmentList: React.FC = () => {
     }
   }
 
-  if (!treatmentsData) return null;
-
   return (
     <>
       <title>{title}</title>
@@ -163,6 +162,23 @@ const TreatmentList: React.FC = () => {
             resource: Resource.treatment,
             actions: Action.CREATE,
           })}
+          reloadData={treatmentsMutate}
+          exportCsv
+          csvFileName="treatments.csv"
+          csvHeader={[
+            { key: "type", label: "Type" },
+            { key: "price", label: "Price" },
+            { key: "createdAt", label: "Created At" },
+          ]}
+          csvData={
+            treatmentsLoading
+              ? []
+              : treatmentsData.map((treatment) => ({
+                  type: treatment.type,
+                  price: treatment.price,
+                  createdAt: treatment.createdAt,
+                }))
+          }
         />
 
         <DeleteItem

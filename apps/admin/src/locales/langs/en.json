@@ -95,7 +95,9 @@
     "add_new": "Add New",
     "search": "Search by name...",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "export_csv": "Export CSV",
+    "reload_data": "Reload Data"
   },
   "action": {
     "title": "Actions",

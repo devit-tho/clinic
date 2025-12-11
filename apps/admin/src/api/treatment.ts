@@ -13,9 +13,8 @@ export function useTreatments() {
   const memoizedTreatments = useMemo(
     () => ({
       treatmentsData: data || [],
-      treatmentsLoading: isLoading,
+      treatmentsLoading: isLoading || isValidating,
       treatmentsError: error,
-      treatmentsValidating: isValidating,
       treatmentsMutate: mutate,
       treatmentsEmpty: !isLoading && !data?.length,
     }),

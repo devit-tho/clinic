@@ -1,5 +1,6 @@
 import { useRecentPatient } from "@/api/patient";
 import { Column } from "@/components/app-table";
+import { LoadingData } from "@/components/loading";
 import { useLocales } from "@/locales";
 
 import {
@@ -14,7 +15,7 @@ import {
 const RecentPatient: React.FC = () => {
   const { t } = useLocales();
 
-  const { patientsData } = useRecentPatient();
+  const { patientsData, patientsLoading } = useRecentPatient();
 
   const TABLE_HEAD: Column[] = [
     { name: t("name"), field: "name" },
@@ -39,7 +40,11 @@ const RecentPatient: React.FC = () => {
         <TableHeader columns={TABLE_HEAD}>
           {(v) => <TableColumn key={v.field}>{v.name}</TableColumn>}
         </TableHeader>
-        <TableBody items={patientsData}>
+        <TableBody
+          items={patientsData}
+          isLoading={patientsLoading}
+          loadingContent={<LoadingData />}
+        >
           {(v) => (
             <TableRow>
               <TableCell>{v.name}</TableCell>

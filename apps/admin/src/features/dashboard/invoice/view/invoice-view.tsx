@@ -20,7 +20,6 @@ import { Icon } from "@iconify/react";
 import { InvoiceDetailPatient, Status } from "@repo/entities";
 import { Action, Resource } from "@repo/permissions";
 import { format } from "date-fns";
-import startCase from "lodash/startCase";
 import { useState } from "react";
 import { Color } from "../../patient/view/patient-invoice-view";
 import DetailModal from "../detail-modal";
@@ -33,7 +32,7 @@ const InvoiceView: React.FC = () => {
   const { handlePermission } = usePermissionAccess();
   const detailModal = useDisclosure();
   const detailPrint = useDisclosure();
-  const { datas, loading } = useInvoices();
+  const { invoicesData, invoicesLoading, invoicesMutate } = useInvoices();
   const [detail, setDetail] = useState<InvoiceDetailPatient>();
 
   const columns: Column[] = [
@@ -43,9 +42,15 @@ const InvoiceView: React.FC = () => {
       sortable: true,
     },
     { name: t("name"), field: "name", sortable: true },
-    { name: t("total"), field: "total" },
+    {
+      name: t("default_payment"),
+      field: "default_payment",
+      sortable: true,
+    },
     { name: t("discount"), field: "discount" },
-    // { name: t("patient_invoice.current_payment"), field: "current_payment" },
+    { name: t("deposit"), field: "deposit" },
+    { name: t("balance"), field: "balance" },
+    { name: t("total"), field: "total" },
     {
       name: t("patient_invoice.invoice_status"),
       field: "invoice_status",
@@ -63,9 +68,11 @@ const InvoiceView: React.FC = () => {
   const invisibleColumns = [
     "invNo",
     "name",
-    "total",
+    "default_payment",
     "discount",
-    "current_payment",
+    "deposit",
+    "balance",
+    "total",
     "invoice_status",
     "payment_status",
     "created_at",
@@ -112,16 +119,22 @@ const InvoiceView: React.FC = () => {
         return <span>{invoice.invNo}</span>;
       case "name":
         return <span>{invoice.patient.name}</span>;
-      case "total":
-        return <span>$ {formatPrice(invoice.payment.total)}</span>;
+      case "default_payment":
+        return <span>$ {formatPrice(invoice.payment.defaultPayment)}</span>;
       case "discount":
         return <span>$ {formatPrice(invoice.payment.discount)}</span>;
+      case "deposit":
+        return <span>$ {formatPrice(invoice.payment.deposit)}</span>;
+      case "balance":
+        return <span>$ {formatPrice(invoice.payment.balance)}</span>;
+      case "total":
+        return <span>$ {formatPrice(invoice.payment.total)}</span>;
       // case "current_payment":
       //   return <span>$ {formatPrice(invoice.payment.currentPayment)}</span>;
       case "invoice_status":
         return (
           <Chip color={getBadgeColor(invoice.status)} className="text-white">
-            {startCase(invoice.status.toLowerCase())}
+            {t(`status_options.${invoice.status.toLowerCase()}`)}
           </Chip>
         );
       case "payment_status":
@@ -130,7 +143,7 @@ const InvoiceView: React.FC = () => {
             color={getBadgeColor(invoice.payment.status)}
             className="text-white"
           >
-            {startCase(invoice.payment.status.toLowerCase())}
+            {t(`status_options.${invoice.payment.status.toLowerCase()}`)}
           </Chip>
         );
       case "created_at":
@@ -197,8 +210,6 @@ const InvoiceView: React.FC = () => {
     }
   };
 
-  if (!datas) return null;
-
   return (
     <>
       <title>{title}</title>
@@ -217,13 +228,44 @@ const InvoiceView: React.FC = () => {
 
         <AppTable<InvoiceDetailPatient>
           filterName="invNo"
-          datas={datas}
+          datas={invoicesData}
           renderCell={renderCell}
           dataName={t("invoice")}
           columns={columns}
           invisibleColumns={invisibleColumns}
-          tableDataLoading={loading}
+          tableDataLoading={invoicesLoading}
           tableEmptyContent={emptyContent}
+          reloadData={invoicesMutate}
+          exportCsv
+          csvData={
+            invoicesLoading
+              ? []
+              : invoicesData.map((invoice) => ({
+                  invNo: invoice.invNo,
+                  name: invoice.patient.name,
+                  default_payment: invoice.payment.defaultPayment,
+                  discount: invoice.payment.discount,
+                  deposit: invoice.payment.deposit,
+                  balance: invoice.payment.balance,
+                  total: invoice.payment.total,
+                  invoice_status: invoice.status.toLowerCase(),
+                  payment_status: invoice.payment.status.toLowerCase(),
+                  created_at: format(invoice.createdAt, config.DATE_FORMAT),
+                }))
+          }
+          csvFileName="invoices.csv"
+          csvHeader={[
+            { key: "invNo", label: "Inv No" },
+            { key: "name", label: "Name" },
+            { key: "default_payment", label: "Default Payment" },
+            { key: "discount", label: "Discount" },
+            { key: "deposit", label: "Deposit" },
+            { key: "balance", label: "Balance" },
+            { key: "total", label: "Total" },
+            { key: "invoice_status", label: "Invoice Status" },
+            { key: "payment_status", label: "Payment Status" },
+            { key: "created_at", label: "Created At" },
+          ]}
         />
 
         <DetailModal
