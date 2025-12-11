@@ -69,12 +69,12 @@ const LoginView: React.FC = () => {
     <>
       <title>{title}</title>
 
-      <div className="max-w-lg mx-auto lg:max-w-sm">
+      <div className="max-w-lg mx-auto lg:max-w-sm flex flex-col">
         <Image
           src="/images/dental-logo.png"
           alt="Dentist logo"
           className="size-36"
-          classNames={{ wrapper: "justify-self-center" }}
+          classNames={{ wrapper: "self-center" }}
         />
 
         <FormProvider methods={methods} onSubmit={onSubmit}>

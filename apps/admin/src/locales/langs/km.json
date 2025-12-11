@@ -39,6 +39,8 @@
   "total": "សរុប",
   "discount": "បញ្ចុះតម្លៃ",
   "balance": "តុល្យភាព",
+  "default_payment": "ការទូទាត់លំនាំដើម",
+  "deposit": "ការដាក់ប្រាក់",
   "created_by": "បង្កើតឡើងដោយ",
   "recent_patient": "អ្នកជំងឺថ្មីៗ",
   "status_options": {

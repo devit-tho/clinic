@@ -40,6 +40,8 @@
   "total": "Total",
   "discount": "Discount",
   "balance": "Balance",
+  "default_payment": "Default Payment",
+  "deposit": "Deposit",
   "created_by": "Created By",
   "recent_patient": "Recent Patient",
   "status_options": {
