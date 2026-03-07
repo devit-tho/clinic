@@ -134,7 +134,7 @@ const InvoiceView: React.FC = () => {
       case "invoice_status":
         return (
           <Chip color={getBadgeColor(invoice.status)} className="text-white">
-            {t(`status_options.${invoice.status.toLowerCase()}`)}
+            {t(`status_options.${invoice.status}`)}
           </Chip>
         );
       case "payment_status":
@@ -143,7 +143,7 @@ const InvoiceView: React.FC = () => {
             color={getBadgeColor(invoice.payment.status)}
             className="text-white"
           >
-            {t(`status_options.${invoice.payment.status.toLowerCase()}`)}
+            {t(`status_options.${invoice.payment.status}`)}
           </Chip>
         );
       case "created_at":

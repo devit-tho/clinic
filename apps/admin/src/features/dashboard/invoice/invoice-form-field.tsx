@@ -1,11 +1,17 @@
 import { useTreatments } from "@/api";
 import AppTable, { Column } from "@/components/app-table";
+import { DeleteItem } from "@/components/delete-item";
 import { RHFTextField } from "@/components/hook-form";
 import RHFSelect from "@/components/hook-form/rhf-select";
 import Iconify from "@/components/iconify";
+import { useOptions } from "@/hooks/use-options";
 import { useLocales } from "@/locales";
-import { Item, statuses } from "@/utils/default-item";
 import { formatPrice } from "@/utils/format";
+import {
+  basedOnCoverage,
+  getAllTeeth,
+  mutiplyBasedOnCoverage,
+} from "@/utils/tooth";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { addToast, useDisclosure } from "@heroui/react";
@@ -17,10 +23,8 @@ import {
 } from "@repo/schemas";
 import isEmpty from "lodash/isEmpty";
 import isNumber from "lodash/isNumber";
-import lowerCase from "lodash/lowerCase";
-import snakeCase from "lodash/snakeCase";
 import { useCallback, useMemo, useState } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext } from "react-hook-form";
 import DetailFormDrawer from "./detail-form-drawer";
 
 // ----------------------------------------------------------------------
@@ -40,8 +44,17 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
   editMode = false,
 }) => {
   const [editValueIndex, setEditValueIndex] = useState<number | undefined>();
+  const [deleteValueIndex, setDeleteValueIndex] = useState<
+    number | undefined
+  >();
 
   const methods = useFormContext<CreateOrUpdateInvoiceDetailType>();
+
+  const { append, remove, fields } = useFieldArray({
+    control: methods.control,
+    name: "details",
+    keyName: "_id",
+  });
 
   const { t } = useLocales();
 
@@ -50,6 +63,8 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
   const detailFormDrawer = useDisclosure();
 
   const deleteDetailDialog = useDisclosure();
+
+  const statusOptions = useOptions("status");
 
   const { setValue, watch } = methods;
 
@@ -62,9 +77,9 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
           acc[t.id] = t;
           return acc;
         },
-        {}
+        {},
       ),
-    [treatmentsData]
+    [treatmentsData],
   );
 
   const columns: Column[] = useMemo(
@@ -78,16 +93,24 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
       { name: t("total"), field: "total" },
       { name: "", field: "actions" },
     ],
-    [t]
+    [t],
   );
 
   const renderCell = useCallback(
-    (data: CreateOrUpdateDetailType, columnKey: React.Key, ind?: number) => {
+    (
+      data: CreateOrUpdateDetailType & { _id: string },
+      columnKey: React.Key,
+      ind?: number,
+    ) => {
       const cellValue = data[columnKey as keyof CreateOrUpdateDetailType];
       const tooth = data.tooth.join(", ");
       const currentTreatment = treatmentMap[data.treatmentId];
 
       const number = data.upper + data.lower;
+
+      const allTeeth = getAllTeeth();
+
+      const isValidAllTeeth = allTeeth.every((v) => data.tooth.includes(v));
 
       if (isEmpty(currentTreatment)) return null;
 
@@ -97,10 +120,13 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
         case "price":
           return <span>$ {formatPrice(currentTreatment.price)}</span>;
         case "tooth":
-          return <span>{tooth}</span>;
+          return <span>{isValidAllTeeth ? t("all") : tooth}</span>;
         case "number":
           return <span>{number}</span>;
         case "total":
+          if (basedOnCoverage(currentTreatment)) {
+            return <span>$ {formatPrice(currentTreatment.price)}</span>;
+          }
           return <span>$ {formatPrice(currentTreatment.price * number)}</span>;
         case "actions":
           return (
@@ -121,6 +147,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                   <Iconify icon="solar:pen-bold-duotone" width={18} />
                 </Button>
               </Tooltip>
+
               <Tooltip
                 content={t("action.delete")}
                 placement="bottom"
@@ -132,7 +159,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                   color="danger"
                   variant="light"
                   size="sm"
-                  onPress={() => onDeleteDetail(ind as number)}
+                  onPress={() => openDeleteDrawer(ind as number)}
                 >
                   <Iconify icon="solar:trash-bin-2-bold-duotone" width={18} />
                 </Button>
@@ -143,91 +170,120 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
           return cellValue;
       }
     },
-    [t, treatmentMap]
+    [t, treatmentMap],
   );
-
-  const statusOptions = statuses.map<Item>((d) => {
-    const label = snakeCase(lowerCase(d.label));
-    return {
-      key: d.key,
-      label: t(`status_options.${label}`),
-    };
-  });
 
   // useEffect(() => {
   //   setValue("invoice.total", number * price, { shouldValidate: true });
   // }, [number]);
 
   function processDetail(v: CreateOrUpdateDetailType, isUpdate = false) {
-    const detailParse = CreateOrUpdateDetailSchema.safeParse(v);
+    try {
+      const detailParse = CreateOrUpdateDetailSchema.safeParse(v);
 
-    if (!detailParse.success) {
-      detailParse.error.issues.forEach((issue) => {
-        addToast({
-          description: issue.message,
-          color: "danger",
+      if (!detailParse.success) {
+        detailParse.error.issues.forEach((issue) => {
+          addToast({
+            description: issue.message,
+            color: "danger",
+          });
         });
+        return false;
+      }
+
+      if (isUpdate && typeof editValueIndex === "number") {
+        setValue(
+          "details",
+          value.details.map((d, i) => (i === editValueIndex ? v : d)),
+          {
+            shouldValidate: true,
+          },
+        );
+
+        addToast({
+          description: t("detail_updated_successfully"),
+          color: "success",
+        });
+      } else {
+        append(v);
+
+        addToast({
+          description: t("detail_added_successfully"),
+          color: "success",
+        });
+      }
+
+      const currentTreatment = treatmentMap[v.treatmentId];
+
+      if (!currentTreatment) return false;
+
+      const number = v.upper + v.lower;
+
+      const total = mutiplyBasedOnCoverage(number, currentTreatment);
+
+      setValue("invoice.defaultPayment", value.invoice.defaultPayment + total, {
+        shouldValidate: true,
       });
+
+      setValue("invoice.total", value.invoice.total + total, {
+        shouldValidate: true,
+      });
+
+      setValue("invoice.balance", value.invoice.balance + total, {
+        shouldValidate: true,
+      });
+
+      addToast({
+        description: t("detail_added_successfully"),
+        color: "success",
+      });
+
+      return true;
+    } catch (error) {
+      addToast({
+        description: t("something_went_wrong"),
+        color: "danger",
+      });
+
       return false;
     }
+  }
 
-    setValue(
-      "details",
-      isUpdate && editValueIndex !== undefined
-        ? value.details.map((d, i) => (i === editValueIndex ? v : d))
-        : [...value.details, v],
-      {
-        shouldValidate: true,
-      }
-    );
+  function onDeleteDetail() {
+    if (typeof deleteValueIndex !== "number") return;
 
-    const currentTreatment = treatmentMap[v.treatmentId];
+    const currentDetail = fields[deleteValueIndex];
 
-    const number = v.upper + v.lower;
+    const currentTreatment = treatmentMap[currentDetail.treatmentId];
 
-    const total = number * currentTreatment?.price;
+    if (!currentTreatment) return;
 
-    setValue("invoice.defaultPayment", value.invoice.defaultPayment + total, {
+    const number = currentDetail.upper + currentDetail.lower;
+    const total = mutiplyBasedOnCoverage(number, currentTreatment);
+
+    remove(deleteValueIndex);
+
+    setValue("invoice.defaultPayment", value.invoice.defaultPayment - total, {
       shouldValidate: true,
     });
-
-    setValue("invoice.total", value.invoice.total + total, {
+    setValue("invoice.discount", currentTreatment.price / fields.length, {
       shouldValidate: true,
     });
-
-    setValue("invoice.balance", value.invoice.balance + total, {
+    setValue("invoice.total", value.invoice.total - total, {
       shouldValidate: true,
     });
 
     addToast({
-      description: "Detail added successfully",
+      description: t("detail_removed_successfully"),
       color: "success",
     });
 
-    return true;
+    deleteDetailDialog.onClose();
   }
 
-  function onDeleteDetail(index: number) {
-    const currentDetail = value.details[index];
-
-    if (currentDetail?.id) {
-      deleteDetailDialog.onOpen();
-    } else {
-      setValue(
-        "details",
-        value.details.filter((_, i) => i !== index)
-      );
-
-      const currentTreatment = treatmentMap[currentDetail.treatmentId];
-
-      const number = currentDetail.upper + currentDetail.lower;
-
-      const total = number * currentTreatment?.price;
-
-      setValue("invoice.defaultPayment", value.invoice.defaultPayment - total, {
-        shouldValidate: true,
-      });
-    }
+  function openDeleteDrawer(index: number) {
+    setDeleteValueIndex(index);
+    deleteDetailDialog.onOpen();
   }
 
   function onUpdateDetail(index: number) {
@@ -263,24 +319,33 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
             type="number"
             value={String(value.invoice.discount)}
             label={t("discount")}
-            endContent={<>$</>}
+            min={0}
+            max={100}
+            endContent={<>%</>}
             isDisabled={value.invoice.defaultPayment <= 0 || editMode}
             onChange={(e) => {
               const num = Number(e.target.value);
 
-              const maxDiscount = value.invoice.defaultPayment;
-              const correctedDiscount = num > maxDiscount ? maxDiscount : num;
+              const depositField = editMode
+                ? (value.invoice.newDeposit ?? 0)
+                : (value.invoice.deposit ?? 0);
+
+              const correctedDiscount = num >= 100 ? 100 : num;
 
               const newBalance =
-                value.invoice.defaultPayment - correctedDiscount;
+                (value.invoice.defaultPayment - depositField) *
+                (1 - correctedDiscount / 100);
+
+              const total =
+                value.invoice.defaultPayment * (1 - correctedDiscount / 100);
 
               setValue("invoice.discount", correctedDiscount, {
                 shouldValidate: true,
               });
-              setValue("invoice.balance", newBalance > 0 ? newBalance : 0, {
+              setValue("invoice.balance", newBalance, {
                 shouldValidate: true,
               });
-              setValue("invoice.total", newBalance > 0 ? newBalance : 0, {
+              setValue("invoice.total", total, {
                 shouldValidate: true,
               });
             }}
@@ -289,19 +354,17 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
           <Input
             type="number"
             label={t(
-              `patient_invoice_form.${editMode ? "new_deposit" : "deposit"}`
+              `patient_invoice_form.${editMode ? "new_deposit" : "deposit"}`,
             )}
             value={
               editMode
-                ? String(value.invoice.newDeposit)
+                ? String(value.invoice.newDeposit || 0)
                 : String(value.invoice.deposit)
             }
             endContent={<>$</>}
             isDisabled={value.invoice.defaultPayment <= 0}
             onChange={(e) => {
               const val = Number(e.target.value);
-
-              console.log(val);
 
               if (editMode) {
                 const rawNewDeposit = Number(val);
@@ -317,7 +380,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                 const remainingBalance = total - previousDeposit;
                 const correctedNewDeposit = Math.min(
                   rawNewDeposit,
-                  remainingBalance
+                  remainingBalance,
                 );
 
                 // Update newDeposit
@@ -329,7 +392,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                 setValue(
                   "invoice.deposit",
                   previousDeposit + correctedNewDeposit,
-                  { shouldValidate: true }
+                  { shouldValidate: true },
                 );
 
                 // Update balance
@@ -338,7 +401,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                   total - (previousDeposit + correctedNewDeposit),
                   {
                     shouldValidate: true,
-                  }
+                  },
                 );
               } else {
                 const finalDeposit = Math.min(val, value.invoice.total);
@@ -352,7 +415,7 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
                   value.invoice.total - finalDeposit,
                   {
                     shouldValidate: true,
-                  }
+                  },
                 );
               }
             }}
@@ -420,10 +483,10 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
           </div>
         </div>
 
-        <AppTable<CreateOrUpdateDetailType>
+        <AppTable<CreateOrUpdateDetailType & { _id: string }>
           showBottomContent={false}
           showTopContent={false}
-          datas={value.details}
+          datas={fields}
           columns={columns}
           renderCell={renderCell}
           dataName="Details"
@@ -450,6 +513,14 @@ const InvoiceFormField: React.FC<InvoiceFormProps> = ({
         onOpenChange={detailFormDrawer.onOpenChange}
         onClose={onCloseDrawer}
         processDetail={processDetail}
+      />
+
+      <DeleteItem
+        title={"detail"}
+        onClose={deleteDetailDialog.onClose}
+        isOpen={deleteDetailDialog.isOpen}
+        onOpenChange={deleteDetailDialog.onOpenChange}
+        onPress={onDeleteDetail}
       />
     </>
   );

@@ -1,8 +1,7 @@
+import { en, km } from "@repo/locales";
 import i18n from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
-import translationEn from "./langs/en.json";
-import translationKm from "./langs/km.json";
 
 i18n
   .use(LanguageDetector)
@@ -10,8 +9,8 @@ i18n
   .init({
     fallbackLng: "en",
     resources: {
-      en: { translation: translationEn },
-      km: { translation: translationKm },
+      en: { translation: en },
+      km: { translation: km },
     },
     interpolation: {
       escapeValue: false,

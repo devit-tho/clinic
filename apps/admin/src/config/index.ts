@@ -1,4 +1,4 @@
-import { Gender, Role, Status } from "@repo/entities";
+import { Gender, Role, Status, TreatmentCoverage } from "@repo/entities";
 
 export default {
   WEB_API: process.env.WEB_API,
@@ -15,6 +15,11 @@ export default {
     NO_DETAILS: Status.NO_DETAILS,
     SUCCESS: Status.SUCCESS,
     PENDING: Status.PENDING,
+  },
+  TREATMENT_COVERAGE: {
+    NONE: TreatmentCoverage.NONE,
+    FULL: TreatmentCoverage.FULL,
+    PARTIAL: TreatmentCoverage.PARTIAL,
   },
   DEFAULT_PAGE_SIZE: 10,
   DATE_FORMAT: "dd MMM yyy",

@@ -230,13 +230,9 @@ export class InvoiceService {
         });
       }
 
-      if (discount > defaultPayment) {
-        throw new BadRequestException('Discount must be less than total');
-      }
+      const balance = (defaultPayment - newDeposit) * (1 - discount / 100);
 
-      const balance = defaultPayment - newDeposit;
-
-      const total = balance - discount;
+      const total = defaultPayment * (1 - discount / 100);
 
       if (newDeposit > balance) {
         throw new BadRequestException(

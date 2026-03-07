@@ -5,11 +5,14 @@ import CustomBreadcrumbs from "@/components/custom-breadcrumb";
 import { DeleteItem } from "@/components/delete-item";
 import { EmptyContent } from "@/components/empty-content";
 import Iconify from "@/components/iconify";
+import config from "@/config";
 import { usePermissionAccess } from "@/hooks/use-permission-access";
 import { useLocales } from "@/locales";
 import { useRouter } from "@/routes/hooks";
 import paths from "@/routes/paths";
+import { getAllTeeth } from "@/utils/tooth";
 import { Button } from "@heroui/button";
+import { Chip, ChipProps } from "@heroui/chip";
 import {
   Dropdown,
   DropdownItem,
@@ -17,8 +20,9 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { useDisclosure } from "@heroui/react";
-import { Treatment } from "@repo/entities";
+import { Treatment, TreatmentCoverage } from "@repo/entities";
 import { Action, Resource } from "@repo/permissions";
+import { format } from "date-fns";
 import { useState } from "react";
 
 // ----------------------------------------------------------------------
@@ -27,7 +31,7 @@ const TreatmentList: React.FC = () => {
   const { t } = useLocales();
   const { handlePermission } = usePermissionAccess();
   const [deletedTreatment, setDeletedTreatment] = useState<Treatment | null>(
-    null
+    null,
   );
   const { isOpen, onClose, onOpen, onOpenChange } = useDisclosure();
   const { treatmentsData, treatmentsLoading, treatmentsMutate } =
@@ -37,10 +41,20 @@ const TreatmentList: React.FC = () => {
   const columns: Column[] = [
     { name: t("type"), field: "type" },
     { name: t("price"), field: "price" },
+    { name: t("coverage"), field: "coverage" },
+    { name: t("teeth"), field: "teeth" },
+    { name: t("created_at"), field: "createdAt" },
     { name: t("action.title"), field: "actions" },
   ];
 
-  const invisibleColumns = ["type", "price", "actions"];
+  const invisibleColumns = [
+    "type",
+    "price",
+    "coverage",
+    "createdAt",
+    "teeth",
+    "actions",
+  ];
 
   const emptyContent = (
     <EmptyContent
@@ -62,9 +76,37 @@ const TreatmentList: React.FC = () => {
   function renderCell(treatment: Treatment, columnKey: React.Key) {
     const cellValue = treatment[columnKey as keyof Treatment];
 
+    function getChipColor(coverage: TreatmentCoverage): ChipProps["color"] {
+      switch (coverage) {
+        case TreatmentCoverage.FULL:
+          return "success";
+        case TreatmentCoverage.PARTIAL:
+          return "primary";
+        case TreatmentCoverage.NONE:
+        default:
+          return "default";
+      }
+    }
+
     switch (columnKey) {
       case "price":
         return <span>$ {treatment.price}</span>;
+      case "coverage":
+        return (
+          <Chip color={getChipColor(treatment.coverage)}>
+            {t(`treatment_coverage.${treatment.coverage}`)}
+          </Chip>
+        );
+      case "teeth":
+        const allTeeth = getAllTeeth();
+
+        const isValidAllTeeth = allTeeth.every((v) =>
+          treatment.teeth.includes(v),
+        );
+
+        return <>{isValidAllTeeth ? t("all") : treatment.teeth.join(", ")}</>;
+      case "createdAt":
+        return <span>{format(treatment.createdAt, config.DATE_FORMAT)}</span>;
       case "actions":
         const disabledKeys = [];
 

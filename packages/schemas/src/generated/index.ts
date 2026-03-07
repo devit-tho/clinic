@@ -30,7 +30,7 @@ export type PaymentScalarFieldEnum = z.infer<typeof PaymentScalarFieldEnumSchema
 
 // File: PermissionScalarFieldEnum.schema.ts
 
-export const PermissionScalarFieldEnumSchema = z.enum(['id', 'resource', 'actions', 'userId', 'isDeleted', 'createdAt'])
+export const PermissionScalarFieldEnumSchema = z.enum(['id', 'resource', 'actions', 'userId', 'createdAt'])
 
 export type PermissionScalarFieldEnum = z.infer<typeof PermissionScalarFieldEnumSchema>;
 
@@ -42,7 +42,7 @@ export type TokenScalarFieldEnum = z.infer<typeof TokenScalarFieldEnumSchema>;
 
 // File: TreatmentScalarFieldEnum.schema.ts
 
-export const TreatmentScalarFieldEnumSchema = z.enum(['id', 'type', 'price', 'isDeleted', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy'])
+export const TreatmentScalarFieldEnumSchema = z.enum(['id', 'type', 'price', 'coverage', 'teeth', 'isDeleted', 'createdAt', 'createdBy', 'updatedAt', 'updatedBy', 'deletedAt', 'deletedBy'])
 
 export type TreatmentScalarFieldEnum = z.infer<typeof TreatmentScalarFieldEnumSchema>;
 
@@ -75,6 +75,12 @@ export type Status = z.infer<typeof StatusSchema>;
 export const GenderSchema = z.enum(['Male', 'Female'])
 
 export type Gender = z.infer<typeof GenderSchema>;
+
+// File: TreatmentCoverage.schema.ts
+
+export const TreatmentCoverageSchema = z.enum(['NONE', 'FULL', 'PARTIAL'])
+
+export type TreatmentCoverage = z.infer<typeof TreatmentCoverageSchema>;
 
 // File: Role.schema.ts
 
@@ -128,9 +134,9 @@ export type InvoiceType = z.infer<typeof InvoiceSchema>;
 
 export const PatientSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  age: z.number().int(),
-  phoneNumber: z.string(),
+  name: z.string().min(3, 'errors.name_at_least_3_characters'),
+  age: z.number().min(3, "errors.age_at_least_3_years_old").max(120, 'errors.age_cannot_be_more_than_120_years_old').int("errors.age_must_be_integer").positive('errors.age_must_be_positive'),
+  phoneNumber: z.string().regex(/^0[1-9]\d{7,8}$/, 'errors.phone_number_invalid'),
   gender: GenderSchema,
   isDeleted: z.boolean(),
   createdAt: z.date(),
@@ -148,11 +154,11 @@ export type PatientType = z.infer<typeof PatientSchema>;
 
 export const PaymentSchema = z.object({
   id: z.string(),
-  defaultPayment: z.number(),
-  discount: z.number(),
-  deposit: z.number(),
-  balance: z.number(),
-  total: z.number(),
+  defaultPayment: z.number().nonnegative('errors.default_payment_must_be_positive'),
+  discount: z.number().min(0, 'errors.discount_at_least_0_percent').max(100, 'errors.discount_cannot_be_more_than_100_percent'),
+  deposit: z.number().nonnegative('errors.deposit_must_be_positive'),
+  balance: z.number().nonnegative('errors.balance_must_be_positive'),
+  total: z.number().nonnegative('errors.total_must_be_positive'),
   status: StatusSchema.default("NO_DETAILS"),
   isDeleted: z.boolean(),
   createdAt: z.date(),
@@ -168,7 +174,6 @@ export const PermissionSchema = z.object({
   resource: z.string(),
   actions: z.array(z.string()),
   userId: z.string(),
-  isDeleted: z.boolean(),
   createdAt: z.date(),
 });
 
@@ -193,8 +198,10 @@ export type TokenType = z.infer<typeof TokenSchema>;
 
 export const TreatmentSchema = z.object({
   id: z.string(),
-  type: z.string(),
-  price: z.number(),
+  type: z.string().min(3, 'errors.type_at_least_3_characters'),
+  price: z.number().positive('error.price_must_be_positive'),
+  coverage: TreatmentCoverageSchema.default("PARTIAL"),
+  teeth: z.array(z.number().int()),
   isDeleted: z.boolean(),
   createdAt: z.date(),
   createdBy: z.string(),

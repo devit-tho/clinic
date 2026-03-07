@@ -9,6 +9,7 @@ import {
   Role as RolePrisma,
   Status as StatusPrisma,
   Token,
+  TreatmentCoverage as TreatmentCoveragePrisma,
   Treatment as TreatmentPrisma,
   User as UserPrisma,
 } from "@repo/database";
@@ -108,6 +109,14 @@ const Status = createEnum<StatusPrisma>()({
 });
 type Status = (typeof Status)[keyof typeof Status];
 
+const TreatmentCoverage = createEnum<TreatmentCoveragePrisma>()({
+  NONE: "NONE",
+  FULL: "FULL",
+  PARTIAL: "PARTIAL",
+});
+type TreatmentCoverage =
+  (typeof TreatmentCoverage)[keyof typeof TreatmentCoverage];
+
 const fields: DefaultField[] = [
   "isDeleted",
   "createdBy",
@@ -121,10 +130,10 @@ type Field = (typeof fields)[number];
 
 const excludeFields = fields.reduce<Record<Field, true>>(
   (pv, cv) => ({ ...pv, [cv]: true }),
-  {} as Record<Field, true>
+  {} as Record<Field, true>,
 );
 
-export { excludeFields, fields, Gender, Role, Status };
+export { excludeFields, fields, Gender, Role, Status, TreatmentCoverage };
 
 export type {
   DefaultField,

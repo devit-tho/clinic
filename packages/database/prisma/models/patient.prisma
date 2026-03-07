@@ -1,9 +1,17 @@
 model Patient {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
+
+  /// @zod.string.min(3, 'errors.name_at_least_3_characters')
   name        String
+
+  /// @zod.custom.use(z.number().min(3, "errors.age_at_least_3_years_old").max(120, 'errors.age_cannot_be_more_than_120_years_old').int("errors.age_must_be_integer").positive('errors.age_must_be_positive'))
   age         Int
+
+  /// @zod.custom.use(z.string().regex(/^0[1-9]\d{7,8}$/, 'errors.phone_number_invalid'))
   phoneNumber String
+
   gender      Gender
+
   isDeleted   Boolean   @default(false) @map("is_deleted")
   createdAt   DateTime  @default(now()) @map("created_at")
   createdBy   String    @map("created_by") @db.ObjectId

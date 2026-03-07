@@ -1,3 +1,4 @@
+import { useLocales } from "@/locales";
 import { Input, InputProps } from "@heroui/input";
 import { Controller, useFormContext } from "react-hook-form";
 
@@ -16,6 +17,8 @@ const RHFTextField: React.FC<RHFTextFieldProps> = ({
   showZero = false,
   ...other
 }) => {
+  const { t } = useLocales();
+
   const { control } = useFormContext();
 
   return (
@@ -40,7 +43,11 @@ const RHFTextField: React.FC<RHFTextFieldProps> = ({
             }
           }}
           isInvalid={!!error}
-          errorMessage={error?.message}
+          errorMessage={
+            error?.message?.startsWith("errors")
+              ? t(error?.message)
+              : error?.message
+          }
           {...other}
         />
       )}

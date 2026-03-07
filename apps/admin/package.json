@@ -20,6 +20,7 @@
     "@react-stately/datepicker": "^3.15.2",
     "@repo/entities": "*",
     "@repo/eslint-config": "*",
+    "@repo/locales": "*",
     "@repo/permissions": "*",
     "@repo/schemas": "*",
     "@repo/typescript-config": "*",

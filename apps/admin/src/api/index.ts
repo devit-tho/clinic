@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import Bowser from "bowser";
-import _capitalize from "lodash/capitalize";
-import _get from "lodash/get";
+import capitalize from "lodash/capitalize";
+import get from "lodash/get";
 
 interface Request<D> {
   path: string;
@@ -20,7 +20,7 @@ type AxiosInstanceConfig = {
 export class ApiError extends Error {
   constructor(
     public readonly statusCode: number,
-    message: string
+    message: string,
   ) {
     super(message);
     this.name = "ApiError";
@@ -53,18 +53,18 @@ client.interceptors.response.use(
         return Promise.reject(
           new ApiError(
             error.response?.data.statusCode,
-            error.response.data.message
-          )
+            error.response.data.message,
+          ),
         );
       }
       return Promise.reject(new Error("Unhandled API error"));
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 function axiosInstanceConfig(config: AxiosInstanceConfig) {
-  const headers = _get(config.options, `headers`) ? config.options.headers : {};
+  const headers = get(config.options, `headers`) ? config.options.headers : {};
   const mappedHeaders = config.token
     ? {
         ...config.options,
@@ -75,7 +75,7 @@ function axiosInstanceConfig(config: AxiosInstanceConfig) {
   const newHeaders = {
     ...mappedHeaders,
     headers: {
-      ...(_get(mappedHeaders, "headers") || {}),
+      ...(get(mappedHeaders, "headers") || {}),
     },
   };
 
@@ -84,7 +84,7 @@ function axiosInstanceConfig(config: AxiosInstanceConfig) {
 
 export function getDevice() {
   const { browser, os, platform } = Bowser.parse(window.navigator.userAgent);
-  const platformType = _capitalize(platform.type);
+  const platformType = capitalize(platform.type);
   const device = `${os.name} | ${platformType} | ${browser.name}`;
   return device;
 }
@@ -99,7 +99,7 @@ export const fetcher = async <T>(url: string) =>
 export async function getRequest<T, D = any>(req: Request<D>): Response<T, D> {
   return client.get<T>(
     req.path,
-    axiosInstanceConfig({ options: req.options || {}, token: req.token })
+    axiosInstanceConfig({ options: req.options || {}, token: req.token }),
   );
 }
 
@@ -107,7 +107,7 @@ export async function postRequest<T, D>(req: Request<D>): Response<T, D> {
   return client.post<T>(
     req.path,
     req.data,
-    axiosInstanceConfig({ options: req.options || {}, token: req.token })
+    axiosInstanceConfig({ options: req.options || {}, token: req.token }),
   );
 }
 
@@ -115,7 +115,7 @@ export async function patchRequest<T, D>(req: Request<D>): Response<T, D> {
   return client.patch<T>(
     req.path,
     req.data,
-    axiosInstanceConfig({ options: req.options || {}, token: req.token })
+    axiosInstanceConfig({ options: req.options || {}, token: req.token }),
   );
 }
 
@@ -123,14 +123,14 @@ export async function putRequest<T, D>(req: Request<D>): Response<T, D> {
   return client.put<T>(
     req.path,
     req.data,
-    axiosInstanceConfig({ options: req.options || {}, token: req.token })
+    axiosInstanceConfig({ options: req.options || {}, token: req.token }),
   );
 }
 
 export async function deleteRequest<T, D>(req: Request<D>): Response<T, D> {
   return client.delete(
     req.path,
-    axiosInstanceConfig({ options: req.options || {}, token: req.token })
+    axiosInstanceConfig({ options: req.options || {}, token: req.token }),
   );
 }
 

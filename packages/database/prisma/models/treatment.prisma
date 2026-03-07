@@ -1,7 +1,16 @@
 model Treatment {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
+
+  /// @zod.string.min(3, 'errors.type_at_least_3_characters')
   type      String
-  price     Float
+
+  /// @zod.custom.use(z.number().positive('error.price_must_be_positive'))
+  price     Float     @default(0)
+
+  coverage TreatmentCoverage @default(PARTIAL)
+
+  teeth     Int[]    @default([])
+
   isDeleted Boolean   @default(false) @map("is_deleted")
   createdAt DateTime  @default(now()) @map("created_at")
   createdBy String    @map("created_by") @db.ObjectId
@@ -14,4 +23,10 @@ model Treatment {
   details Detail[]
 
   @@map("treatments")
+}
+
+enum TreatmentCoverage {
+  NONE
+  FULL
+  PARTIAL
 }

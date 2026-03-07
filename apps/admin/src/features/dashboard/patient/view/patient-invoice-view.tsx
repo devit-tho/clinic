@@ -66,7 +66,7 @@ const initialState: initalInvoiceReducer = {
 
 function reducer(
   state: initalInvoiceReducer,
-  action: ReducerAction
+  action: ReducerAction,
 ): initalInvoiceReducer {
   switch (action.type) {
     case ActionType.SET:
@@ -211,7 +211,7 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
       case "invoice_status":
         return (
           <Chip color={getBadgeColor(invoice.status)} className="text-white">
-            {t(`status_options.${invoice.status.toLowerCase()}`)}
+            {t(`status_options.${invoice.status}`)}
           </Chip>
         );
       case "payment_status":
@@ -220,7 +220,7 @@ const PatientInvoiceView: React.FC<PatientInvoiceProp> = ({ id }) => {
             color={getBadgeColor(invoice.payment.status)}
             className="text-white"
           >
-            {t(`status_options.${invoice.payment.status.toLowerCase()}`)}
+            {t(`status_options.${invoice.payment.status}`)}
           </Chip>
         );
       case "created_at":

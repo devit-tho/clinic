@@ -1,6 +1,7 @@
 import teeth from "@/assets/teeth";
 import { selectTeethPosition } from "@/utils/tooth";
 import { Button } from "@heroui/react";
+import { TreatmentCoverage } from "@repo/entities";
 import { CreateOrUpdateDetailType } from "@repo/schemas";
 import clsx from "clsx";
 import { memo, useEffect, useState } from "react";
@@ -8,23 +9,38 @@ import { memo, useEffect, useState } from "react";
 // ----------------------------------------------------------------------
 
 export interface ToothProps {
-  detail: CreateOrUpdateDetailType;
+  isPatientInvoice?: boolean;
+  tooth: number[];
+  coverage?: TreatmentCoverage;
   onChangePosition: (
-    position: Pick<CreateOrUpdateDetailType, "upper" | "lower" | "tooth">
+    position: Pick<CreateOrUpdateDetailType, "upper" | "lower" | "tooth">,
   ) => void;
 }
 
 // ----------------------------------------------------------------------
 
-const Tooth: React.FC<ToothProps> = ({ detail, onChangePosition }) => {
-  const [position, setPosition] = useState<number[]>([]);
+const Tooth: React.FC<ToothProps> = ({
+  isPatientInvoice = false,
+  tooth = [],
+  coverage = TreatmentCoverage.NONE,
+  onChangePosition,
+}) => {
+  const [position, setPosition] = useState<number[]>(tooth);
 
   const topPosition = selectTeethPosition(teeth, "top");
   const bottomPosition = selectTeethPosition(teeth, "bottom");
 
+  const patientInvoiceCondition =
+    (isPatientInvoice && coverage === TreatmentCoverage.PARTIAL) ||
+    coverage === TreatmentCoverage.FULL;
+
+  const treatmentCondition =
+    (!isPatientInvoice && coverage === TreatmentCoverage.NONE) ||
+    coverage === TreatmentCoverage.FULL;
+
   useEffect(() => {
-    setPosition(detail.tooth || []);
-  }, [detail.tooth]);
+    setPosition(tooth);
+  }, [tooth]);
 
   function handleClickTooth(val: number) {
     const newPosition = position.includes(val)
@@ -35,7 +51,7 @@ const Tooth: React.FC<ToothProps> = ({ detail, onChangePosition }) => {
 
     const newTopTeeth = topPosition.filter((t) => newPosition.includes(t));
     const newBottomTeeth = bottomPosition.filter((t) =>
-      newPosition.includes(t)
+      newPosition.includes(t),
     );
 
     onChangePosition({
@@ -52,7 +68,7 @@ const Tooth: React.FC<ToothProps> = ({ detail, onChangePosition }) => {
           <div
             className={clsx(
               "flex flex-col lg:flex-row border-foreground-200",
-              ind === 0 && "border-b"
+              ind === 0 && "border-b",
             )}
           >
             {data.items.map((item, i) => (
@@ -60,7 +76,7 @@ const Tooth: React.FC<ToothProps> = ({ detail, onChangePosition }) => {
                 key={item.position}
                 className={clsx(
                   "flex gap-x-0.5 border-foreground-200",
-                  i === 0 && "border-r"
+                  i === 0 && "border-r",
                 )}
               >
                 {item.values.map((value) => (
@@ -71,6 +87,11 @@ const Tooth: React.FC<ToothProps> = ({ detail, onChangePosition }) => {
                     tooth={value.tooth}
                     position={data.position}
                     onPress={() => handleClickTooth(value.tooth)}
+                    isCoverage={
+                      isPatientInvoice
+                        ? patientInvoiceCondition
+                        : treatmentCondition
+                    }
                   />
                 ))}
               </div>
@@ -91,18 +112,20 @@ const ToothButton = memo(
     image,
     isActive,
     onPress,
+    isCoverage,
   }: {
     tooth: number;
     position: "top" | "bottom";
     image: string;
     isActive: boolean;
     onPress: () => void;
+    isCoverage?: boolean;
   }) => (
     <>
       <div
         className={clsx(
           "flex items-center gap-y-1.5 py-3.5",
-          position === "top" ? "flex-col" : "flex-col-reverse"
+          position === "top" ? "flex-col" : "flex-col-reverse",
         )}
       >
         <img
@@ -119,10 +142,12 @@ const ToothButton = memo(
           color={isActive ? "primary" : "default"}
           variant={isActive ? "solid" : "light"}
           onPress={onPress}
+          isDisabled={isCoverage}
+          disabled={isCoverage}
         >
           {tooth}
         </Button>
       </div>
     </>
-  )
+  ),
 );

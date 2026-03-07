@@ -1,10 +1,21 @@
 model Payment {
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  /// @zod.custom.use(z.number().nonnegative('errors.default_payment_must_be_positive'))
   defaultPayment Float    @default(0) @map("default_payment")
+
+  /// @zod.custom.use(z.number().min(0, 'errors.discount_at_least_0_percent').max(100, 'errors.discount_cannot_be_more_than_100_percent'))
   discount       Float    @default(0)
+
+  /// @zod.custom.use(z.number().nonnegative('errors.deposit_must_be_positive'))
   deposit        Float    @default(0)
+
+  /// @zod.custom.use(z.number().nonnegative('errors.balance_must_be_positive'))
   balance        Float    @default(0)
+
+  /// @zod.custom.use(z.number().nonnegative('errors.total_must_be_positive'))
   total          Float    @default(0)
+
   status         Status   @default(NO_DETAILS)
   isDeleted      Boolean  @default(false) @map("is_deleted")
   createdAt      DateTime @default(now()) @map("created_at")

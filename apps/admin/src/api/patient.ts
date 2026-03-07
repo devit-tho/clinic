@@ -3,7 +3,7 @@ import { swrOptions } from "@/utils/swr-options";
 import { Patient, PatientInvoice, RecentPatient } from "@repo/entities";
 import { CreateOrUpdatePatientType } from "@repo/schemas";
 import useSWR, { mutate } from "swr";
-import { fetcher, getRequest, postRequest } from ".";
+import { deleteRequest, fetcher, getRequest, postRequest } from ".";
 import { getData } from "./index";
 
 export function usePatients() {
@@ -28,7 +28,7 @@ export function usePatient(id: string) {
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     `/patient/${id}`,
     fetcher<PatientInvoice>,
-    swrOptions
+    swrOptions,
   );
 
   return {
@@ -43,7 +43,7 @@ export function useRecentPatient() {
   const { data, isLoading, error, isValidating, mutate } = useSWR(
     "/patient/recent",
     fetcher<RecentPatient[]>,
-    swrOptions
+    swrOptions,
   );
 
   return {
@@ -60,7 +60,7 @@ export async function getPatient(id: string) {
   const patient = getData<Patient>(
     await getRequest<Patient>({
       path: `/patient/${id}`,
-    })
+    }),
   );
   return patient;
 }
@@ -85,29 +85,15 @@ export async function createPatient(dto: CreateOrUpdatePatientType) {
 
 export async function updatePatient(
   id: string,
-  data: CreateOrUpdatePatientType
+  data: CreateOrUpdatePatientType,
 ) {
   // works on server
-  // await postRequest({ path: `/patient/${id}`, data });
-
-  mutate<Patient[]>("/patient", (v) =>
-    (v || []).map((patient) => {
-      if (patient.id !== id) return patient;
-      return {
-        id: "asd",
-        name: data.name,
-        age: data.age,
-        phoneNumber: data.phoneNumber,
-        gender: data.gender,
-        createdAt: new Date(),
-      };
-    })
-  );
+  await postRequest({ path: `/patient/${id}`, data });
 }
 
 export async function deletePatient(patient: Patient) {
   // works on server
-  // await deleteRequest({ path: `/patient/${patient.id}` });
+  await deleteRequest({ path: `/patient/${patient.id}` });
 
   // works on client
   mutate<Patient[]>(
@@ -118,6 +104,6 @@ export async function deletePatient(patient: Patient) {
     },
     {
       revalidate: false,
-    }
+    },
   );
 }
