@@ -1,4 +1,4 @@
-import { Gender, Role, Status } from "@repo/entities";
+import { Gender, Role, Status, TreatmentCoverage } from "@repo/entities";
 import {
   ChangePasswordType,
   CreateOrUpdateDetailType,
@@ -49,6 +49,8 @@ export const createUpdateInvoiceDetailDefaultValues: CreateOrUpdateInvoiceDetail
 export const createUpdateTreatmentDefaultValues: CreateOrUpdateTreatmentType = {
   price: 0,
   type: "",
+  coverage: TreatmentCoverage.NONE,
+  teeth: [],
 };
 
 export const userDefaultValues: UpdateUserType = {
